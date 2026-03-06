@@ -60,28 +60,27 @@
         rel="stylesheet">
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 
 <body class="font-body text-arabesque-dark">
 
     <!-- TOP NAVIGATION BAR                                  -->
     <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-shadow duration-300"
-        style="background: url('images/menu_bg.jpg') repeat-x center; background-size: auto 100%;">
+        style="background: url('assets/images/menu_bg.jpg') repeat-x center; background-size: auto 100%;">
         <div class="absolute inset-0 bg-arabesque-dark/60"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-14">
                 <a href="#hero" class="flex items-center gap-2">
-                    <img src="images/logo.png" alt="ARBSQ Logo" class="h-9 w-auto">
+                    <img src="assets/images/logo.png" alt="ARBSQ Logo" class="h-9 w-auto">
                     <span class="font-display text-xl font-bold text-gold-400 tracking-wide">ARBSQ</span>
                 </a>
 
                 <div class="hidden md:flex items-center gap-8">
                     <a href="#tools"
-                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Tools</a>
-                    <a href="#tools"
-                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Projects</a>
+                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Projects
+                        & Tools</a>
                     <a href="#research"
                         class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Research</a>
                     <a href="#tutorials"
@@ -100,9 +99,8 @@
             <div id="mobileMenu" class="mobile-menu md:hidden">
                 <div class="pb-4 space-y-2">
                     <a href="#tools"
-                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Tools</a>
-                    <a href="#tools"
-                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Projects</a>
+                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Projects
+                        & Tools</a>
                     <a href="#research"
                         class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Research</a>
                     <a href="#tutorials"
@@ -113,12 +111,12 @@
     </nav>
     <!-- HERO SECTION                                        -->
     <section id="hero" class="relative min-h-[92vh] flex items-center justify-center pt-14"
-        style="background: url('images/bg.jpg') repeat center; background-size: cover;">
+        style="background: url('assets/images/bg.jpg') repeat center; background-size: cover;">
         <div class="absolute inset-0 bg-gradient-to-b from-cream-50/30 via-transparent to-cream-50/70"></div>
 
         <div class="relative text-center px-4 max-w-3xl mx-auto">
             <div class="animate-fade-in mb-6">
-                <img src="images/logo.png" alt="ARBSQ Arabic Calligraphy Logo"
+                <img src="assets/images/logo.png" alt="ARBSQ Arabic Calligraphy Logo"
                     class="mx-auto h-44 sm:h-56 w-auto animate-float drop-shadow-lg">
             </div>
 
@@ -147,11 +145,11 @@
 
     <!-- PROJECTS & TOOLS                                    -->
     <section id="tools" class="relative py-20 sm:py-28"
-        style="background: url('images/bg.jpg') repeat center; background-size: cover;">
+        style="background: url('assets/images/bg.jpg') repeat center; background-size: cover;">
         <div class="absolute inset-0 bg-cream-50/85"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
+            <div class="text-center mb-10">
                 <h2 class="section-title font-display text-3xl sm:text-4xl font-bold text-arabesque-dark">
                     Projects &amp; Tools
                 </h2>
@@ -160,10 +158,43 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Tag Filter Bar -->
+            <div id="tagFilterBar" class="flex flex-wrap items-center justify-center gap-2 mb-10">
+                <button data-tag="all"
+                    class="tag-filter-btn active px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    All
+                </button>
+                <button data-tag="arabic"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    Arabic
+                </button>
+                <button data-tag="nlp"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    NLP
+                </button>
+                <button data-tag="speech"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    Speech
+                </button>
+                <button data-tag="translation"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    Translation
+                </button>
+                <button data-tag="terminology"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    Terminology
+                </button>
+                <button data-tag="automation"
+                    class="tag-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all duration-200">
+                    Automation
+                </button>
+            </div>
+
+            <div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 <!-- 1 ─ Country Name Translation -->
-                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group">
+                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group"
+                    data-tags="translation,arabic">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md">
@@ -179,12 +210,17 @@
                                 Country Name Translation &amp; Sorting</h3>
                             <p class="mt-1 text-sm text-arabesque-copper/80">Translate and sort country names across
                                 multiple languages.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Translation</span>
+                                <span class="tag-pill">Arabic</span>
+                            </div>
                         </div>
                     </div>
                 </a>
 
                 <!-- 2 ─ Syntactic Parser -->
-                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group">
+                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group"
+                    data-tags="nlp,arabic">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md">
@@ -200,12 +236,17 @@
                                 Constituency | Dependency Syntactic Parser</h3>
                             <p class="mt-1 text-sm text-arabesque-copper/80">Parse sentence structures with constituency
                                 and dependency analysis.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">NLP</span>
+                                <span class="tag-pill">Arabic</span>
+                            </div>
                         </div>
                     </div>
                 </a>
 
                 <!-- 3 ─ Canvas Sentence Alignment -->
-                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group">
+                <a href="#" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group"
+                    data-tags="nlp,translation">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md">
@@ -221,12 +262,17 @@
                                 Canvas Sentence Alignment</h3>
                             <p class="mt-1 text-sm text-arabesque-copper/80">Visually align parallel sentences in a
                                 bitext alignment system.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">NLP</span>
+                                <span class="tag-pill">Translation</span>
+                            </div>
                         </div>
                     </div>
                 </a>
 
                 <!-- 4 ─ Arabic NLP Tool (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="nlp,arabic">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -243,12 +289,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Advanced natural language processing for Arabic
                                 text.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">NLP</span>
+                                <span class="tag-pill">Arabic</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 5 ─ STAR Aligner (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="speech,nlp">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -265,12 +316,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Align audio recordings with transcribed text for
                                 research.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Speech</span>
+                                <span class="tag-pill">NLP</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 6 ─ Phoneme Recognizer (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="speech,arabic">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -287,12 +343,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Phoneme-level recognition for language learning
                                 support.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Speech</span>
+                                <span class="tag-pill">Arabic</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 7 ─ Terminology Extraction (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="terminology,nlp">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -309,12 +370,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Extract domain-specific terminology from large
                                 corpora.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Terminology</span>
+                                <span class="tag-pill">NLP</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 8 ─ Terminology Collaboration (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="terminology,automation">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -331,12 +397,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Collaborate with peers on terminology
                                 management.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Terminology</span>
+                                <span class="tag-pill">Automation</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 9 ─ Translation with Templates (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="translation,automation">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -353,12 +424,17 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Template-based translation workflows for
                                 efficiency.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Translation</span>
+                                <span class="tag-pill">Automation</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 10 ─ Translation QA Tool (Coming soon) -->
-                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80">
+                <div class="project-card glass rounded-2xl p-6 border border-gold-200/40 opacity-80"
+                    data-tags="translation,nlp">
                     <div class="flex items-start gap-4">
                         <div
                             class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md opacity-60">
@@ -375,6 +451,10 @@
                             </div>
                             <p class="text-sm text-arabesque-copper/70">Quality assurance checks for translation
                                 accuracy.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3">
+                                <span class="tag-pill">Translation</span>
+                                <span class="tag-pill">NLP</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -385,7 +465,7 @@
     <!-- CURRENT RESEARCH                                    -->
     <section id="research" class="relative py-20 sm:py-28">
         <div class="absolute inset-0"
-            style="background: url('images/menu_bg.jpg') repeat center; background-size: auto 100%;"></div>
+            style="background: url('assets/images/menu_bg.jpg') repeat center; background-size: auto 100%;"></div>
         <div class="absolute inset-0 bg-arabesque-dark/90"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -398,10 +478,11 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 <!-- Parsing -->
-                <div class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center">
+                <a href="#"
+                    class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center block">
                     <div
                         class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center mb-5 group-hover:from-gold-500/30 group-hover:to-gold-600/20 transition-all">
                         <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -413,10 +494,11 @@
                     <h3 class="font-display text-lg font-bold text-cream-100 mb-2">Parsing</h3>
                     <p class="text-sm text-arabesque-light/60">Syntactic and semantic parsing techniques for natural
                         language understanding.</p>
-                </div>
+                </a>
 
                 <!-- Arabic NLP -->
-                <div class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center">
+                <a href="#"
+                    class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center block">
                     <div
                         class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center mb-5 group-hover:from-gold-500/30 group-hover:to-gold-600/20 transition-all">
                         <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -428,10 +510,11 @@
                     <h3 class="font-display text-lg font-bold text-cream-100 mb-2">Arabic NLP</h3>
                     <p class="text-sm text-arabesque-light/60">Natural language processing tailored for the Arabic
                         language morphology and syntax.</p>
-                </div>
+                </a>
 
                 <!-- Small Language Models -->
-                <div class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center">
+                <a href="#"
+                    class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center block">
                     <div
                         class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center mb-5 group-hover:from-gold-500/30 group-hover:to-gold-600/20 transition-all">
                         <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -443,10 +526,11 @@
                     <h3 class="font-display text-lg font-bold text-cream-100 mb-2">Small Language Models</h3>
                     <p class="text-sm text-arabesque-light/60">Efficient, compact models for on-device and low-resource
                         language tasks.</p>
-                </div>
+                </a>
 
                 <!-- Speech -->
-                <div class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center">
+                <a href="#"
+                    class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center block">
                     <div
                         class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center mb-5 group-hover:from-gold-500/30 group-hover:to-gold-600/20 transition-all">
                         <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -458,7 +542,23 @@
                     <h3 class="font-display text-lg font-bold text-cream-100 mb-2">Speech</h3>
                     <p class="text-sm text-arabesque-light/60">Speech recognition, synthesis, and audio-text alignment
                         research.</p>
-                </div>
+                </a>
+
+                <!-- Semantic Technologies -->
+                <a href="#"
+                    class="project-card group glass-dark rounded-2xl p-7 border border-gold-700/30 text-center block">
+                    <div
+                        class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/10 flex items-center justify-center mb-5 group-hover:from-gold-500/30 group-hover:to-gold-600/20 transition-all">
+                        <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-cream-100 mb-2">Semantic Technologies</h3>
+                    <p class="text-sm text-arabesque-light/60">Research on knowledge graphs, ontologies, and linked data
+                        for language resources.</p>
+                </a>
 
             </div>
         </div>
@@ -467,7 +567,7 @@
 
     <!-- TUTORIALS, ARTICLES & VIDEOS                        -->
     <section id="tutorials" class="relative py-20 sm:py-28"
-        style="background: url('images/bg.jpg') repeat center; background-size: cover;">
+        style="background: url('assets/images/bg.jpg') repeat center; background-size: cover;">
         <div class="absolute inset-0 bg-cream-50/90"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -532,7 +632,7 @@
                                 <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+                                        d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
                                 </svg>
                             </div>
                             <span class="text-xs font-semibold text-gold-700 uppercase tracking-wider">Article</span>
@@ -551,7 +651,7 @@
     <!-- FOOTER — Social & Subscribe                         -->
     <footer class="relative py-16">
         <div class="absolute inset-0"
-            style="background: url('images/menu_bg.jpg') repeat center; background-size: auto 100%;"></div>
+            style="background: url('assets/images/menu_bg.jpg') repeat center; background-size: auto 100%;"></div>
         <div class="absolute inset-0 bg-arabesque-dark/92"></div>
 
         <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -623,12 +723,13 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="scripts/main.js"></script>
+    <script src="assets/js/main.js"></script>
     <script>
         const copyright = document.getElementById('copyright');
         const currentYear = new Date().getFullYear();
         copyright.textContent = `© ${currentYear} ARBSQ. All rights reserved.`;
     </script>
+
 </body>
 
 </html>
