@@ -51,4 +51,32 @@ document.addEventListener('DOMContentLoaded', () => {
         this.querySelector('button').classList.add('opacity-60', 'cursor-not-allowed');
     });
 
+    // Tag filtering
+    const filterBtns = document.querySelectorAll('.tag-filter-btn');
+    const projectCards = document.querySelectorAll('#projectGrid .project-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tag = btn.dataset.tag;
+
+            // Update active button
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter cards
+            projectCards.forEach(card => {
+                if (tag === 'all') {
+                    card.classList.remove('tag-hidden');
+                } else {
+                    const cardTags = (card.dataset.tags || '').split(',');
+                    if (cardTags.includes(tag)) {
+                        card.classList.remove('tag-hidden');
+                    } else {
+                        card.classList.add('tag-hidden');
+                    }
+                }
+            });
+        });
+    });
+
 });
