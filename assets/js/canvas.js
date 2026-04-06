@@ -258,7 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 8, src: "Six official languages are used in its proceedings.", trg: "تُستخدم ست لغات رسمية في أعمالها." },
         ];
     }
-
+    // helper function for text alignment
+    function isRTL(langCode) {
+        return ['ar', 'he', 'fa', 'ur'].includes(langCode);
+    }
     // Table Rendering
     function renderTable() {
         bitextTableBody.innerHTML = '';
@@ -271,10 +274,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 tr.classList.add('selected');
             }
 
+            // Sync header alignment with content direction
+            const trgDir = isRTL(trgLang.value) ? 'rtl' : 'ltr';
+            const srcDir = isRTL(srcLang.value) ? 'rtl' : 'ltr';
+
+            const headers = document.querySelectorAll('.bitext-table thead th');
+            // headers[0] is #, headers[1] is SOURCE, headers[2] is TARGET
+            headers[1].setAttribute('dir', srcDir);
+            headers[2].setAttribute('dir', trgDir);
+
+
             tr.innerHTML = `
                 <td>${index + 1}</td>
-                <td>${escapeHtml(seg.src)}</td>
-                <td dir="rtl">${escapeHtml(seg.trg)}</td>
+                <td dir="${srcDir}">${escapeHtml(seg.src)}</td>
+                <td dir="${trgDir}">${escapeHtml(seg.trg)}</td>
             `;
 
             tr.addEventListener('click', (e) => handleRowClick(index, e));
