@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTable();
         showToast(`Deleted ${count} row(s).`);
     }
-
+    // maybe there's a better way to do this
     function renumberSegments() {
         segments.forEach((seg, i) => { seg.id = i + 1; });
     }
@@ -448,9 +448,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('No data to export.');
             return;
         }
-
+        const sanitize = (str) => str.replace(/\t/g, ' ').replace(/\n/g, ' ');
         const header = 'Source\tTarget\n';
-        const rows = segments.map(s => `${s.src}\t${s.trg}`).join('\n');
+        const rows = segments
+            .map(s => `${sanitize(s.src)}\t${sanitize(s.trg)}`)
+            .join('\n');
         const blob = new Blob([header + rows], { type: 'text/tab-separated-values;charset=utf-8' });
         downloadBlob(blob, `${docNameInput.value || 'export'}.tsv`);
         showToast('Exported as TSV.');
