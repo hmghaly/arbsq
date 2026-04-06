@@ -1,11 +1,385 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas — Sentence Alignment & Translation QA | ARBSQ</title>
+    <meta name="description"
+        content="Canvas tool for multilingual sentence alignment and translation quality assurance. Align, merge, split, and export parallel sentence pairs.">
+
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#FFF9E6', 100: '#FFF0BF', 200: '#FFE08A', 300: '#FFD054',
+                            400: '#F5BC2E', 500: '#D4A017', 600: '#B8860B', 700: '#9A6F08',
+                            800: '#7C5906', 900: '#5E4305',
+                        },
+                        cream: {
+                            50: '#FFFDF5', 100: '#FFF8E1', 200: '#FFF3CC',
+                            300: '#FFEDB8', 400: '#FFE49E', 500: '#F5DEB3',
+                        },
+                        arabesque: {
+                            dark: '#2C1810', brown: '#4A2C1A', copper: '#8B5E3C',
+                            sand: '#C4A872', light: '#E8D5B7',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Amiri', 'serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../../assets/css/styles.css">
+    <link rel="stylesheet" href="../../assets/css/canvas.css">
+    <link rel="icon" href="../../assets/images/favicon.ico" type="image/x-icon" />
 </head>
-<body>
-Test
+
+<body class="font-body text-arabesque-dark canvas-page"
+    style="background: url('../../assets/images/bg.jpg') repeat center; background-size: cover;">
+    <div class="fixed inset-0 bg-cream-50/80 pointer-events-none" style="z-index: -1;"></div>
+
+    <!-- ═══════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════ -->
+    <header class="canvas-header">
+        <div class="canvas-header-inner">
+            <a href="../../index.html" class="canvas-brand">
+                <img src="../../assets/images/logo.png" alt="ARBSQ Logo">
+                <span>ARBSQ</span>
+            </a>
+
+            <nav class="canvas-nav-links">
+                <a href="../../index.html" class="canvas-nav-link">← Home</a>
+                <a href="dashboard.html" class="canvas-nav-link">
+                    <svg style="display:inline-block; width:0.85rem; height:0.85rem; vertical-align:-2px; margin-right:2px;"
+                        fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                    Dashboard
+                </a>
+            </nav>
+        </div>
+    </header>
+    <!--Input Module-->
+    <main id="inputModule" class="input-module fade-in">
+
+        <h1 class="input-module-title">Canvas</h1>
+        <p class="input-module-subtitle">Sentence Alignment & Translation Quality Assurance</p>
+
+        <!-- Document Name -->
+        <div class="doc-name-group">
+            <label for="docName">Document / Project Name</label>
+            <input type="text" id="docName" class="doc-name-input" placeholder="e.g. UN_Report_2024">
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar" role="tablist">
+            <button class="tab-btn active" data-tab="source-target" role="tab" aria-selected="true"
+                id="tab-btn-source-target">
+                <svg style="display:inline-block; width:0.9rem; height:0.9rem; vertical-align:-2px; margin-right:4px;"
+                    fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Source-Target
+            </button>
+            <button class="tab-btn" data-tab="bitext" role="tab" aria-selected="false" id="tab-btn-bitext">
+                <svg style="display:inline-block; width:0.9rem; height:0.9rem; vertical-align:-2px; margin-right:4px;"
+                    fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+                Bitext
+            </button>
+            <button class="tab-btn" data-tab="web-pages" role="tab" aria-selected="false" id="tab-btn-web-pages">
+                <svg style="display:inline-block; width:0.9rem; height:0.9rem; vertical-align:-2px; margin-right:4px;"
+                    fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9 9 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                </svg>
+                Web Pages
+            </button>
+            <button class="tab-btn" data-tab="file-pair" role="tab" aria-selected="false" id="tab-btn-file-pair">
+                <svg style="display:inline-block; width:0.9rem; height:0.9rem; vertical-align:-2px; margin-right:4px;"
+                    fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                File Pair
+            </button>
+        </div>
+
+        <!-- ── Tab: Source-Target ──────────────────────── -->
+        <div class="tab-panel active" id="tab-source-target" role="tabpanel">
+            <div class="tab-panel-inner">
+                <div class="text-pair-grid">
+                    <div>
+                        <label class="input-label" for="srcTextInput">Source Text</label>
+                        <textarea id="srcTextInput" class="canvas-textarea"
+                            placeholder="Paste source text here — one sentence per line, or a full paragraph..."></textarea>
+                    </div>
+                    <div>
+                        <label class="input-label" for="trgTextInput">Target Text</label>
+                        <textarea id="trgTextInput" class="canvas-textarea"
+                            placeholder="Paste target (translated) text here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Tab: Bitext ────────────────────────────── -->
+        <div class="tab-panel" id="tab-bitext" role="tabpanel">
+            <div class="tab-panel-inner">
+                <label class="input-label" for="bitextInput">Bitext Content</label>
+                <p style="font-size:0.78rem; color:#8B5E3C; margin-bottom:0.6rem;">
+                    Paste tab-separated source/target pairs (e.g. columns copied from Excel). Each line =
+                    one pair, separated by a tab character.
+                </p>
+                <textarea id="bitextInput" class="canvas-textarea" style="min-height: 14rem;"
+                    placeholder="Source sentence 1&#9;Target sentence 1&#10;Source sentence 2&#9;Target sentence 2"></textarea>
+            </div>
+        </div>
+
+        <!-- ── Tab: Web Pages ─────────────────────────── -->
+        <div class="tab-panel" id="tab-web-pages" role="tabpanel">
+            <div class="tab-panel-inner">
+                <div class="text-pair-grid">
+                    <div>
+                        <label class="input-label" for="srcUrlInput">Source Web Page URL</label>
+                        <input type="url" id="srcUrlInput" class="canvas-input"
+                            placeholder="https://example.com/source-page">
+                    </div>
+                    <div>
+                        <label class="input-label" for="trgUrlInput">Target Web Page URL</label>
+                        <input type="url" id="trgUrlInput" class="canvas-input"
+                            placeholder="https://example.com/target-page">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Tab: File Pair ─────────────────────────── -->
+        <div class="tab-panel" id="tab-file-pair" role="tabpanel">
+            <div class="tab-panel-inner">
+                <div class="text-pair-grid">
+                    <div>
+                        <label class="input-label">Source File</label>
+                        <div class="file-upload-area">
+                            <input type="file" id="srcFileInput" accept=".txt,.csv,.tsv,.xliff,.tmx,.html">
+                            <div class="file-upload-icon">
+                                <svg style="width:2.5rem; height:2.5rem; margin:0 auto;" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                            </div>
+                            <p class="file-upload-text">
+                                Drag &amp; drop or <strong>click to browse</strong>
+                            </p>
+                            <p class="file-name-display" id="srcFileName"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="input-label">Target File</label>
+                        <div class="file-upload-area">
+                            <input type="file" id="trgFileInput" accept=".txt,.csv,.tsv,.xliff,.tmx,.html">
+                            <div class="file-upload-icon">
+                                <svg style="width:2.5rem; height:2.5rem; margin:0 auto;" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                            </div>
+                            <p class="file-upload-text">
+                                Drag &amp; drop or <strong>click to browse</strong>
+                            </p>
+                            <p class="file-name-display" id="trgFileName"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="lang-select-row">
+            <div class="lang-select-group">
+                <label for="srcLang">Source Language</label>
+                <select id="srcLang" class="canvas-select">
+                    <!--PLACEHOLDER VALUES-->
+                    <option value="en">English</option>
+                    <option value="ar">Arabic</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="es">Spanish</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ru">Russian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                </select>
+            </div>
+            <div class="lang-select-group">
+                <label for="trgLang">Target Language</label>
+                <select id="trgLang" class="canvas-select">
+                    <option value="ar" selected>Arabic</option>
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="es">Spanish</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ru">Russian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-row">
+            <button id="submitBtn" class="canvas-submit-btn">
+                <svg style="width:1.1rem; height:1.1rem;" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
+                </svg>
+                Submit &amp; Align
+            </button>
+        </div>
+    </main>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         OUTPUT MODULE
+         ═══════════════════════════════════════════════════ -->
+    <div id="outputModule" class="output-module hidden">
+
+        <!-- Output Toolbar -->
+        <div class="output-toolbar">
+            <div class="output-toolbar-inner">
+                <div class="toolbar-left">
+                    <!-- Back -->
+                    <button id="backBtn" class="back-btn" title="Back to input">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        Back
+                    </button>
+
+                    <!-- Mode toggle -->
+                    <div class="mode-toggle">
+                        <button id="modeAlign" class="mode-toggle-btn active">Align</button>
+                        <button id="modeQA" class="mode-toggle-btn">QA</button>
+                    </div>
+
+                    <!-- Align controls -->
+                    <div id="alignControls" style="display: flex; align-items: center; gap: 0.35rem;">
+                        <div class="toolbar-separator"></div>
+                        <button id="mergeBtn" class="toolbar-action-btn" title="Merge selected rows (adjacent)">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-6L16.5 15m0 0L12 10.5m4.5 4.5V1.5" />
+                            </svg>
+                            Merge
+                        </button>
+                        <button id="splitBtn" class="toolbar-action-btn"
+                            title="Split selected row at sentence boundaries">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                            </svg>
+                            Split
+                        </button>
+                        <button id="deleteBtn" class="toolbar-action-btn danger" title="Delete selected rows">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                            Delete
+                        </button>
+                        <span id="selectionBadge" class="selection-badge hidden">0 selected</span>
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button id="exportBtn" class="toolbar-action-btn" title="Export as TSV">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        Export
+                    </button>
+                    <button id="downloadBtn" class="toolbar-action-btn" title="Download project as JSON">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Align View: Bitext Table -->
+        <div id="alignView" class="bitext-table-container fade-in">
+            <table class="bitext-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Source</th>
+                        <th>Target</th>
+                    </tr>
+                </thead>
+                <tbody id="bitextTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- QA View: Placeholder -->
+        <div id="qaView" class="hidden">
+            <div class="qa-placeholder fade-in">
+                <svg class="qa-placeholder-icon" fill="none" stroke="currentColor" stroke-width="1.5"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <h3>QA Mode : Coming Soon</h3>
+                <p>Translation quality assurance features are currently under development. Switch to Align mode to work
+                    with your sentence pairs.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="canvas-footer">
+        <p>©
+            <script>document.write(new Date().getFullYear())</script> <a href="../../index.html">ARBSQ</a> — Canvas
+            Sentence Alignment Tool
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../../assets/js/canvas.js"></script>
 </body>
+
 </html>
