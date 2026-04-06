@@ -1,0 +1,117 @@
+<!--This is just a placeholder dashboard page-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Canvas | ARBSQ</title>
+    <meta name="description" content="Dashboard for managing Canvas sentence alignment documents and projects.">
+
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#FFF9E6', 100: '#FFF0BF', 200: '#FFE08A', 300: '#FFD054',
+                            400: '#F5BC2E', 500: '#D4A017', 600: '#B8860B', 700: '#9A6F08',
+                            800: '#7C5906', 900: '#5E4305',
+                        },
+                        cream: {
+                            50: '#FFFDF5', 100: '#FFF8E1', 200: '#FFF3CC',
+                            300: '#FFEDB8', 400: '#FFE49E', 500: '#F5DEB3',
+                        },
+                        arabesque: {
+                            dark: '#2C1810', brown: '#4A2C1A', copper: '#8B5E3C',
+                            sand: '#C4A872', light: '#E8D5B7',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Amiri', 'serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../../assets/css/styles.css">
+    <link rel="stylesheet" href="../../assets/css/canvas.css">
+    <link rel="icon" href="../../assets/images/favicon.ico" type="image/x-icon" />
+</head>
+
+<body class="font-body text-arabesque-dark canvas-page"
+    style="background: url('../../assets/images/bg.jpg') repeat center; background-size: cover;">
+    <div class="fixed inset-0 bg-cream-50/80 pointer-events-none" style="z-index: -1;"></div>
+
+    <!-- Header -->
+    <header class="canvas-header">
+        <div class="canvas-header-inner">
+            <a href="../../index.html" class="canvas-brand">
+                <img src="../../assets/images/logo.png" alt="ARBSQ Logo">
+                <span>ARBSQ</span>
+            </a>
+            <nav class="canvas-nav-links">
+                <a href="index.html" class="canvas-nav-link">← Canvas</a>
+                <a href="../../index.html" class="canvas-nav-link">Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Coming Soon Content -->
+    <main class="flex-1 flex items-center justify-center" style="min-height: calc(100vh - 7rem);">
+        <div class="text-center px-6" style="animation: canvasFadeIn 0.6s ease forwards;">
+
+            <!-- Icon -->
+            <div class="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
+                style="background: linear-gradient(135deg, rgba(212,160,23,0.15), rgba(184,134,11,0.08));">
+                <svg class="w-10 h-10 text-gold-500" fill="none" stroke="currentColor" stroke-width="1.5"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+            </div>
+
+            <h1 class="font-display text-3xl sm:text-4xl font-bold text-arabesque-dark mb-3">
+                Dashboard
+            </h1>
+            <p class="text-arabesque-copper text-lg mb-6 max-w-md mx-auto">
+                Coming soon...
+            </p>
+            <p class="text-arabesque-sand text-sm max-w-sm mx-auto mb-8">
+                This dashboard will allow you to view, manage, and access all your previously uploaded and processed
+                documents.
+            </p>
+
+            <a href="index.html"
+                class="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-all"
+                style="background: linear-gradient(135deg, #D4A017, #B8860B); box-shadow: 0 4px 14px rgba(212,160,23,0.25);">
+                <svg style="width:1rem; height:1rem;" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Go to Canvas
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="canvas-footer">
+        <p>©
+            <script>document.write(new Date().getFullYear())</script> <a href="../../index.html">ARBSQ</a>
+        </p>
+    </footer>
+</body>
+
+</html>
