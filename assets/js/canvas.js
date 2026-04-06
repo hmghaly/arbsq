@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mergeBtn = document.getElementById('mergeBtn');
     const splitBtn = document.getElementById('splitBtn');
     const deleteBtn = document.getElementById('deleteBtn');
+    const insertBlankBtn = document.getElementById('insertBlankBtn');
     const exportBtn = document.getElementById('exportBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const bitextTableBody = document.getElementById('bitextTableBody');
@@ -48,9 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentTab = 'source-target';
     let currentMode = 'align';
-    let segments = [];
-    let selectedRows = new Set();
-    let lastClickedRow = null;
+    let sourceSegments = [];
+    let targetSegments = [];
+    let selectedSource = new Set();
+    let selectedTarget = new Set();
+    let lastClickedSource = null;
+    let lastClickedTarget = null;
 
     // Tab switching logic
     tabBtns.forEach(btn => {
@@ -118,8 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
         outputModule.classList.remove('active');
         outputModule.classList.add('hidden');
         inputModule.classList.remove('hidden');
-        segments = [];
-        selectedRows.clear();
+        sourceSegments = [];
+        targetSegments = [];
+        selectedSource.clear();
+        selectedTarget.clear();
+        lastClickedSource = null;
+        lastClickedTarget = null;
     }
 
     backBtn.addEventListener('click', showInput);
@@ -144,29 +152,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    //Submit / Process Input
-    //TODO: Switch to the actual backend API call logic later
+    // Submit / Process Input
     submitBtn.addEventListener('click', () => {
         const data = gatherInput();
         if (!data) return;
-        segments = processInput(data);
-        selectedRows.clear();
+        const result = processInput(data);
+        sourceSegments = result.source;
+        targetSegments = result.target;
+        selectedSource.clear();
+        selectedTarget.clear();
+        lastClickedSource = null;
+        lastClickedTarget = null;
         showOutput();
     });
 
     function gatherInput() {
         const docName = docNameInput.value.trim() || 'Untitled';
-
         let srcText = '', trgText = '', bitext = '', srcUrl = '', trgUrl = '';
 
         switch (currentTab) {
             case 'source-target':
                 srcText = srcTextInput.value.trim();
                 trgText = trgTextInput.value.trim();
-                if (!srcText && !trgText) {
-                    showToast('Please enter source and/or target text.');
-                    return null;
-                }
+                // Allow empty input to trigger mock data (for demo purposes)
                 break;
             case 'bitext':
                 bitext = bitextInput.value.trim();
@@ -206,28 +214,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * processInput — stub for backend integration
-     * Currently returns mock aligned segments.
      */
     function processInput(data) {
+        let source = [];
+        let target = [];
+
         // If bitext tab, attempt to parse tab-separated pairs
         if (data.input_type === 'bitext' && data.bitext) {
             return parseBitext(data.bitext);
         }
 
         // If source-target tab with text, split by newlines and pair
-        if (data.input_type === 'source-target' && data.src_text && data.trg_text) {
-            const srcLines = data.src_text.split(/\n+/).filter(l => l.trim());
-            const trgLines = data.trg_text.split(/\n+/).filter(l => l.trim());
-            const maxLen = Math.max(srcLines.length, trgLines.length);
-            const segs = [];
-            for (let i = 0; i < maxLen; i++) {
-                segs.push({
-                    id: i + 1,
-                    src: srcLines[i] || '',
-                    trg: trgLines[i] || '',
-                });
+        if (data.input_type === 'source-target' && (data.src_text || data.trg_text)) {
+            source = data.src_text ? data.src_text.split(/\n+/).filter(l => l.trim()) : [];
+            target = data.trg_text ? data.trg_text.split(/\n+/).filter(l => l.trim()) : [];
+            if (source.length || target.length) {
+                return { source, target };
             }
-            return segs.length ? segs : getMockSegments();
         }
 
         // fallback to mock data
@@ -236,108 +239,134 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function parseBitext(text) {
         const lines = text.split(/\n/).filter(l => l.trim());
-        return lines.map((line, i) => {
+        let source = [];
+        let target = [];
+        lines.forEach((line) => {
             const parts = line.split('\t');
-            return {
-                id: i + 1,
-                src: (parts[0] || '').trim(),
-                trg: (parts[1] || '').trim(),
-            };
+            source.push((parts[0] || '').trim());
+            target.push((parts[1] || '').trim());
         });
+        return { source, target };
     }
 
     function getMockSegments() {
-        return [
-            { id: 1, src: "The United Nations was founded in 1945.", trg: "تأسست الأمم المتحدة عام 1945." },
-            { id: 2, src: "Its headquarters is in New York City.", trg: "يقع مقرها الرئيسي في مدينة نيويورك." },
-            { id: 3, src: "The organization promotes international cooperation.", trg: "تعمل المنظمة على تعزيز التعاون الدولي." },
-            { id: 4, src: "There are 193 member states.", trg: "يبلغ عدد الدول الأعضاء 193 دولة." },
-            { id: 5, src: "The General Assembly is the main deliberative organ.", trg: "الجمعية العامة هي الجهاز التداولي الرئيسي." },
-            { id: 6, src: "The Security Council handles peace and security.", trg: "يتولى مجلس الأمن مسائل السلام والأمن." },
-            { id: 7, src: "The Secretary-General is the chief administrative officer.", trg: "الأمين العام هو كبير الموظفين الإداريين." },
-            { id: 8, src: "Six official languages are used in its proceedings.", trg: "تُستخدم ست لغات رسمية في أعمالها." },
-        ];
+        return {
+            source: [
+                "The United Nations was founded in 1945.",
+                "Its headquarters is in New York City.",
+                "The organization promotes international cooperation.",
+                "There are 193 member states.",
+                "The General Assembly is the main deliberative organ.",
+                "The Security Council handles peace and security.",
+                "The Secretary-General is the chief administrative officer.",
+                "Six official languages are used in its proceedings."
+            ],
+            target: [
+                "تأسست الأمم المتحدة عام 1945.",
+                "يقع مقرها الرئيسي في مدينة نيويورك.",
+                "تعمل المنظمة على تعزيز التعاون الدولي.",
+                "يبلغ عدد الدول الأعضاء 193 دولة.",
+                "الجمعية العامة هي الجهاز التداولي الرئيسي.",
+                "يتولى مجلس الأمن مسائل السلام والأمن.",
+                "الأمين العام هو كبير الموظفين الإداريين.",
+                "تُستخدم ست لغات رسمية في أعمالها."
+            ]
+        };
     }
-    // helper function for text alignment
+
     function isRTL(langCode) {
         return ['ar', 'he', 'fa', 'ur'].includes(langCode);
     }
+
     // Table Rendering
     function renderTable() {
         bitextTableBody.innerHTML = '';
+        const maxLen = Math.max(sourceSegments.length, targetSegments.length);
 
-        segments.forEach((seg, index) => {
+        const trgDir = isRTL(trgLang.value) ? 'rtl' : 'ltr';
+        const srcDir = isRTL(srcLang.value) ? 'rtl' : 'ltr';
+
+        const headers = document.querySelectorAll('.bitext-table thead th');
+        headers[1].setAttribute('dir', srcDir);
+        headers[2].setAttribute('dir', trgDir);
+
+        for (let i = 0; i < maxLen; i++) {
             const tr = document.createElement('tr');
-            tr.dataset.index = index;
+            
+            const numTd = document.createElement('td');
+            numTd.textContent = i + 1;
+            
+            const srcTd = document.createElement('td');
+            srcTd.setAttribute('dir', srcDir);
+            let srcContent = sourceSegments[i] !== undefined ? escapeHtml(sourceSegments[i]) : '';
+            srcTd.innerHTML = srcContent;
+            if (selectedSource.has(i)) srcTd.classList.add('selected');
+            srcTd.addEventListener('click', (e) => handleCellClick('source', i, e));
 
-            if (selectedRows.has(index)) {
-                tr.classList.add('selected');
-            }
+            const trgTd = document.createElement('td');
+            trgTd.setAttribute('dir', trgDir);
+            let trgContent = targetSegments[i] !== undefined ? escapeHtml(targetSegments[i]) : '';
+            trgTd.innerHTML = trgContent;
+            if (selectedTarget.has(i)) trgTd.classList.add('selected');
+            trgTd.addEventListener('click', (e) => handleCellClick('target', i, e));
 
-            // Sync header alignment with content direction
-            const trgDir = isRTL(trgLang.value) ? 'rtl' : 'ltr';
-            const srcDir = isRTL(srcLang.value) ? 'rtl' : 'ltr';
-
-            const headers = document.querySelectorAll('.bitext-table thead th');
-            // headers[0] is #, headers[1] is SOURCE, headers[2] is TARGET
-            headers[1].setAttribute('dir', srcDir);
-            headers[2].setAttribute('dir', trgDir);
-
-
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td dir="${srcDir}">${escapeHtml(seg.src)}</td>
-                <td dir="${trgDir}">${escapeHtml(seg.trg)}</td>
-            `;
-
-            tr.addEventListener('click', (e) => handleRowClick(index, e));
+            tr.appendChild(numTd);
+            tr.appendChild(srcTd);
+            tr.appendChild(trgTd);
             bitextTableBody.appendChild(tr);
-        });
+        }
 
         updateSelectionBadge();
     }
 
     function escapeHtml(str) {
+        if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     }
 
-    // Row Selection
-    function handleRowClick(index, e) {
-        if (e.shiftKey && lastClickedRow !== null) {
-            // Range select
-            const start = Math.min(lastClickedRow, index);
-            const end = Math.max(lastClickedRow, index);
+    // Cell Selection
+    function handleCellClick(type, index, e) {
+        const selectedSet = type === 'source' ? selectedSource : selectedTarget;
+        const otherSet = type === 'source' ? selectedTarget : selectedSource;
+        let lastClicked = type === 'source' ? lastClickedSource : lastClickedTarget;
+
+        if (e.shiftKey && lastClicked !== null) {
+            // Range select within the same column
+            const start = Math.min(lastClicked, index);
+            const end = Math.max(lastClicked, index);
             if (!e.ctrlKey && !e.metaKey) {
-                selectedRows.clear();
+                selectedSet.clear();
             }
             for (let i = start; i <= end; i++) {
-                selectedRows.add(i);
+                selectedSet.add(i);
             }
         } else if (e.ctrlKey || e.metaKey) {
-            // Toggle single
-            if (selectedRows.has(index)) {
-                selectedRows.delete(index);
+            // Toggle single cell
+            if (selectedSet.has(index)) {
+                selectedSet.delete(index);
             } else {
-                selectedRows.add(index);
+                selectedSet.add(index);
             }
         } else {
-            // Single select
-            if (selectedRows.size === 1 && selectedRows.has(index)) {
-                selectedRows.clear();
-            } else {
-                selectedRows.clear();
-                selectedRows.add(index);
-            }
+            // Single select. If selecting in one column without ctrl, clear both columns.
+            selectedSource.clear();
+            selectedTarget.clear();
+            selectedSet.add(index);
         }
 
-        lastClickedRow = index;
+        if (type === 'source') {
+            lastClickedSource = index;
+        } else {
+            lastClickedTarget = index;
+        }
+
         renderTable();
     }
 
     function updateSelectionBadge() {
-        const count = selectedRows.size;
+        const count = selectedSource.size + selectedTarget.size;
         if (count > 0) {
             selectionBadge.textContent = `${count} selected`;
             selectionBadge.classList.remove('hidden');
@@ -347,125 +376,179 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cell Operations
-    mergeBtn.addEventListener('click', mergeRows);
-    splitBtn.addEventListener('click', splitRow);
-    deleteBtn.addEventListener('click', deleteRows);
+    mergeBtn.addEventListener('click', mergeCells);
+    splitBtn.addEventListener('click', splitCells);
+    deleteBtn.addEventListener('click', deleteCells);
+    if(insertBlankBtn) insertBlankBtn.addEventListener('click', insertBlankCell);
 
-    function mergeRows() {
-        if (selectedRows.size < 2) {
-            showToast('Select at least 2 rows to merge.');
+    function mergeCells() {
+        if (selectedSource.size < 2 && selectedTarget.size < 2) {
+            showToast('Select at least 2 cells in the same column to merge.');
             return;
         }
 
-        const indices = Array.from(selectedRows).sort((a, b) => a - b);
+        let mergedSource = false;
+        let mergedTarget = false;
 
-        // Check contiguous
-        for (let i = 1; i < indices.length; i++) {
-            if (indices[i] !== indices[i - 1] + 1) {
-                showToast('Can only merge adjacent rows.');
-                return;
+        // Helper function to handle merge per column
+        const processMerge = (selectedSet, segmentsArray) => {
+            if (selectedSet.size >= 2) {
+                const indices = Array.from(selectedSet).sort((a, b) => a - b);
+                for (let i = 1; i < indices.length; i++) {
+                    if (indices[i] !== indices[i - 1] + 1) {
+                        return { success: false, error: 'Can only merge contiguous cells.' };
+                    }
+                }
+                const mergedText = indices.map(i => segmentsArray[i]).filter(Boolean).join(' ');
+                segmentsArray[indices[0]] = mergedText;
+                for (let i = indices.length - 1; i >= 1; i--) {
+                    segmentsArray.splice(indices[i], 1);
+                }
+                selectedSet.clear();
+                selectedSet.add(indices[0]);
+                return { success: true, count: indices.length };
             }
-        }
-
-        const mergedSrc = indices.map(i => segments[i].src).filter(Boolean).join(' ');
-        const mergedTrg = indices.map(i => segments[i].trg).filter(Boolean).join(' ');
-
-        // Replace first with merged, remove rest
-        segments[indices[0]] = {
-            id: segments[indices[0]].id,
-            src: mergedSrc,
-            trg: mergedTrg,
+            return { success: false, bypass: true };
         };
 
-        // Remove merged rows (from end to avoid index shifting)
-        for (let i = indices.length - 1; i >= 1; i--) {
-            segments.splice(indices[i], 1);
+        const resSrc = processMerge(selectedSource, sourceSegments);
+        const resTrg = processMerge(selectedTarget, targetSegments);
+
+        if (resSrc.error) {
+            showToast(`Source: ${resSrc.error}`);
+            return;
+        }
+        if (resTrg.error) {
+            showToast(`Target: ${resTrg.error}`);
+            return;
         }
 
-        // Re-number
-        renumberSegments();
-        selectedRows.clear();
-        selectedRows.add(indices[0]);
-        renderTable();
-        showToast(`Merged ${indices.length} rows.`);
+        if (resSrc.success) mergedSource = true;
+        if (resTrg.success) mergedTarget = true;
+
+        if (mergedSource || mergedTarget) {
+            renderTable();
+            showToast('Cells merged successfully.');
+        }
     }
 
-    function splitRow() {
-        if (selectedRows.size !== 1) {
-            showToast('Select exactly 1 row to split.');
+    function splitCells() {
+        if (selectedSource.size > 1 || selectedTarget.size > 1 || (selectedSource.size === 0 && selectedTarget.size === 0)) {
+            showToast('Select exactly 1 cell to split.');
             return;
         }
 
-        const index = Array.from(selectedRows)[0];
-        const seg = segments[index];
+        let splitPerformed = false;
 
-        // Split by sentence boundary (period, question mark, exclamation)
-        const srcParts = splitBySentence(seg.src);
-        const trgParts = splitBySentence(seg.trg);
-        const maxParts = Math.max(srcParts.length, trgParts.length);
+        const processSplit = (selectedSet, segmentsArray) => {
+            if (selectedSet.size === 1) {
+                const index = Array.from(selectedSet)[0];
+                const text = segmentsArray[index];
+                const parts = splitBySentence(text);
+                
+                if (parts.length < 2) {
+                    return { success: false, error: 'No proper sentence boundary found to split on.' };
+                }
 
-        if (maxParts < 2) {
-            showToast('No sentence boundary found to split on.');
+                segmentsArray.splice(index, 1, ...parts);
+                selectedSet.clear();
+                return { success: true };
+            }
+            return { success: false, bypass: true };
+        };
+
+        const resSrc = processSplit(selectedSource, sourceSegments);
+        const resTrg = processSplit(selectedTarget, targetSegments);
+
+        if (resSrc.error) {
+            showToast(`Source: ${resSrc.error}`);
+            return;
+        }
+        if (resTrg.error) {
+            showToast(`Target: ${resTrg.error}`);
             return;
         }
 
-        const newSegs = [];
-        for (let i = 0; i < maxParts; i++) {
-            newSegs.push({
-                id: 0,
-                src: (srcParts[i] || '').trim(),
-                trg: (trgParts[i] || '').trim(),
-            });
-        }
+        if (resSrc.success || resTrg.success) splitPerformed = true;
 
-        segments.splice(index, 1, ...newSegs);
-        renumberSegments();
-        selectedRows.clear();
-        renderTable();
-        showToast(`Split into ${maxParts} rows.`);
+        if (splitPerformed) {
+            renderTable();
+            showToast('Cell split successfully.');
+        }
     }
 
     function splitBySentence(text) {
         if (!text) return [text];
-        // Split at sentence-ending punctuation followed by space or end
         const parts = text.split(/(?<=[.!?؟。])\s+/);
         return parts.filter(p => p.trim());
     }
 
-    function deleteRows() {
-        if (selectedRows.size === 0) {
-            showToast('No rows selected.');
+    function deleteCells() {
+        if (selectedSource.size === 0 && selectedTarget.size === 0) {
+            showToast('No cells selected.');
             return;
         }
 
-        const count = selectedRows.size;
-        const indices = Array.from(selectedRows).sort((a, b) => b - a);
+        const count = selectedSource.size + selectedTarget.size;
 
-        indices.forEach(i => segments.splice(i, 1));
-        renumberSegments();
-        selectedRows.clear();
+        const deleteFrom = (selectedSet, segmentsArray) => {
+            const indices = Array.from(selectedSet).sort((a, b) => b - a);
+            indices.forEach(i => {
+                if (i < segmentsArray.length) {
+                    segmentsArray.splice(i, 1);
+                }
+            });
+            selectedSet.clear();
+        };
+
+        deleteFrom(selectedSource, sourceSegments);
+        deleteFrom(selectedTarget, targetSegments);
+
         renderTable();
-        showToast(`Deleted ${count} row(s).`);
+        showToast(`Deleted ${count} cell(s).`);
     }
-    // maybe there's a better way to do this
-    function renumberSegments() {
-        segments.forEach((seg, i) => { seg.id = i + 1; });
+
+    function insertBlankCell() {
+        if (selectedSource.size === 0 && selectedTarget.size === 0) {
+            showToast('Select a cell to insert a blank row above it.');
+            return;
+        }
+
+        const insertInto = (selectedSet, segmentsArray) => {
+            // Insert above the first selected cell in the column
+            if (selectedSet.size > 0) {
+                const minIndex = Math.min(...Array.from(selectedSet));
+                segmentsArray.splice(minIndex, 0, "");
+                selectedSet.clear();
+            }
+        };
+
+        insertInto(selectedSource, sourceSegments);
+        insertInto(selectedTarget, targetSegments);
+
+        renderTable();
+        showToast('Blank cell inserted.');
     }
+
 
     // Export / Download
     exportBtn.addEventListener('click', exportTSV);
     downloadBtn.addEventListener('click', downloadProject);
 
     function exportTSV() {
-        if (!segments.length) {
+        if (sourceSegments.length === 0 && targetSegments.length === 0) {
             showToast('No data to export.');
             return;
         }
-        const sanitize = (str) => str.replace(/\t/g, ' ').replace(/\n/g, ' ');
+        const sanitize = (str) => (str || '').replace(/\t/g, ' ').replace(/\n/g, ' ');
         const header = 'Source\tTarget\n';
-        const rows = segments
-            .map(s => `${sanitize(s.src)}\t${sanitize(s.trg)}`)
-            .join('\n');
+        
+        const maxLen = Math.max(sourceSegments.length, targetSegments.length);
+        let rows = '';
+        for (let i = 0; i < maxLen; i++) {
+            rows += `${sanitize(sourceSegments[i])}\t${sanitize(targetSegments[i])}\n`;
+        }
+
         const blob = new Blob([header + rows], { type: 'text/tab-separated-values;charset=utf-8' });
         downloadBlob(blob, `${docNameInput.value || 'export'}.tsv`);
         showToast('Exported as TSV.');
@@ -477,7 +560,8 @@ document.addEventListener('DOMContentLoaded', () => {
             src_lang: srcLang.value,
             trg_lang: trgLang.value,
             exported_at: new Date().toISOString(),
-            segments: segments,
+            source_segments: sourceSegments,
+            target_segments: targetSegments,
         };
 
         const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
@@ -515,28 +599,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-        // Only in output mode
         if (outputModule.classList.contains('hidden')) return;
 
-        // Ctrl+A: select all rows
+        // Ctrl+A: select all cells
         if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
             e.preventDefault();
-            selectedRows.clear();
-            segments.forEach((_, i) => selectedRows.add(i));
+            selectedSource.clear();
+            selectedTarget.clear();
+            sourceSegments.forEach((_, i) => selectedSource.add(i));
+            targetSegments.forEach((_, i) => selectedTarget.add(i));
             renderTable();
         }
 
         // Delete / Backspace: delete selected
         if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (selectedRows.size > 0 && document.activeElement === document.body) {
+            if ((selectedSource.size > 0 || selectedTarget.size > 0) && document.activeElement === document.body) {
                 e.preventDefault();
-                deleteRows();
+                deleteCells();
             }
         }
 
         // Escape: clear selection
         if (e.key === 'Escape') {
-            selectedRows.clear();
+            selectedSource.clear();
+            selectedTarget.clear();
             renderTable();
         }
     });

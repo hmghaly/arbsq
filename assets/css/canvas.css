@@ -590,7 +590,6 @@
     border-spacing: 0;
     border: 1px solid rgba(212, 160, 23, 0.2);
     border-radius: 0.75rem;
-    overflow: hidden;
 }
 
 .bitext-table thead th {
@@ -602,6 +601,17 @@
     color: #fff;
     background: rgba(44, 24, 16, 0.88);
     text-align: left;
+    position: sticky;
+    top: 6.8rem; /* Header 3.5rem + Toolbar ~3.3rem */
+    z-index: 10;
+}
+
+.bitext-table thead th:first-child {
+    border-top-left-radius: 0.75rem;
+}
+
+.bitext-table thead th:last-child {
+    border-top-right-radius: 0.75rem;
 }
 
 .bitext-table thead th:first-child {
@@ -609,9 +619,12 @@
     text-align: center;
 }
 
+.bitext-table thead th:nth-child(n+2) {
+    width: calc((100% - 3rem) / 2);
+}
+
 .bitext-table tbody tr {
     transition: background 0.15s;
-    cursor: pointer;
 }
 
 .bitext-table tbody tr:nth-child(even) {
@@ -623,13 +636,7 @@
 }
 
 .bitext-table tbody tr:hover {
-    background: rgba(212, 160, 23, 0.08);
-}
-
-.bitext-table tbody tr.selected {
-    background: rgba(212, 160, 23, 0.15) !important;
-    outline: 2px solid rgba(212, 160, 23, 0.4);
-    outline-offset: -2px;
+    background: rgba(212, 160, 23, 0.08); /* slight row highlight */
 }
 
 .bitext-table tbody td {
@@ -639,6 +646,17 @@
     color: #2C1810;
     border-top: 1px solid rgba(212, 160, 23, 0.1);
     vertical-align: top;
+    cursor: pointer;
+    transition: background-color 0.1s, outline 0.1s;
+    position: relative; /* to allow inside outline / z-index if needed */
+}
+
+/* Cell selection highlight */
+.bitext-table tbody td.selected {
+    background: rgba(212, 160, 23, 0.2) !important;
+    outline: 2px solid rgba(212, 160, 23, 0.5);
+    outline-offset: -2px;
+    z-index: 2;
 }
 
 .bitext-table tbody td:first-child {
@@ -648,6 +666,7 @@
     font-weight: 600;
     width: 3rem;
     user-select: none;
+    cursor: default;
 }
 
 .bitext-table tbody td:nth-child(2) {
