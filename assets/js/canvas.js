@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeAlignBtn = document.getElementById('modeAlign');
     const modeQaBtn = document.getElementById('modeQA');
     const alignControls = document.getElementById('alignControls');
+    const qaControls = document.getElementById('qaControls');
     const mergeBtn = document.getElementById('mergeBtn');
     const splitBtn = document.getElementById('splitBtn');
     const deleteBtn = document.getElementById('deleteBtn');
@@ -145,10 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alignView.classList.remove('hidden');
             qaView.classList.add('hidden');
             alignControls.classList.remove('hidden');
+            qaControls.classList.add('hidden');
         } else {
             alignView.classList.add('hidden');
             qaView.classList.remove('hidden');
             alignControls.classList.add('hidden');
+            qaControls.classList.remove('hidden');
         }
     }
 
