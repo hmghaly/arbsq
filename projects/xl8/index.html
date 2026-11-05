@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New project | XL8 · ARBSQ</title>
+    <meta name="description" content="XL8 translation workspace: prepare text, edit sentence pairs, and export your translation.">
+    <link rel="icon" href="../../assets/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/xl8.css">
+    <script type="module" src="../../assets/js/xl8.js"></script>
+</head>
+<body data-page="input">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+        <a class="brand" href="../../index.html"><img src="../../assets/images/logo.png" alt="ARBSQ"><span>XL8</span></a>
+        <nav aria-label="Main navigation"><a href="../canvas/">Canvas</a><a href="dashboard.html">Projects</a><a href="index.html" aria-current="page">New project</a></nav>
+    </header>
+    <main id="main" class="page input-page">
+        <div class="page-heading"><p class="context">Computer assisted translation</p><h1>Start a translation</h1><p>Bring your source text. Work through the translation, one sentence at a time.</p></div>
+        <div id="error" class="message error" role="alert" hidden></div>
+        <form id="project-form" class="panel">
+            <div class="form-row"><label for="project-name">Project name <span class="optional">(optional)</span></label><input id="project-name" maxlength="150" placeholder="e.g. Annual report"></div>
+            <fieldset class="source-field"><legend>Source material</legend>
+                <div class="tabs" role="tablist" aria-label="Source input method"><button type="button" role="tab" id="paste-tab" aria-selected="true" aria-controls="paste-panel">Paste text</button><button type="button" role="tab" id="file-tab" aria-selected="false" aria-controls="file-panel" tabindex="-1">TXT file</button></div>
+                <div id="paste-panel" role="tabpanel" aria-labelledby="paste-tab"><label for="source-text">Source text</label><textarea id="source-text" rows="8" dir="auto" placeholder="Paste document or website text here…"></textarea></div>
+                <div id="file-panel" role="tabpanel" aria-labelledby="file-tab" hidden><label for="source-file">Text document</label><input type="file" id="source-file" accept=".txt,text/plain"><p class="help">UTF-8 TXT files, up to 1 MB. Word and PDF files are not supported in this version.</p><p id="file-status" class="help" aria-live="polite">No file selected.</p></div>
+            </fieldset>
+            <div class="form-grid"><div><label for="source-language">Source language</label><select id="source-language"></select></div><div><label for="target-language">Target language</label><select id="target-language"></select></div></div>
+            <div class="form-row"><label for="model">MT / AI model</label><select id="model" aria-describedby="model-note"></select><p id="model-note" class="help">Translation is not connected yet. Your model choice and prompt are saved for future use; suggestions are sample content only.</p></div>
+            <div class="form-row"><label for="prompt">Additional prompt <span class="optional">(optional)</span></label><textarea id="prompt" rows="3" maxlength="5000" placeholder="e.g. Use a formal style for international organizations."></textarea></div>
+            <div class="form-actions"><button class="button primary" type="submit" id="create-project">Create project</button><button class="button" type="button" id="load-sample">Try sample text</button></div>
+            <p class="help storage-note">Text stays in this browser. Clearing site data removes saved projects. Export your translation when you need a copy.</p>
+        </form>
+    </main>
+    <footer class="site-footer">ARBSQ · XL8 translation workspace<span>Projects are saved in this browser only.</span></footer>
+</body>
+</html>
