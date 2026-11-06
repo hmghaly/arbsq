@@ -1,0 +1,50 @@
+:root { --arbsq-header-height: 56px; --arbsq-tool-nav-height: 44px; }
+[data-arbsq-nav], [data-arbsq-nav] * { box-sizing: border-box; }
+[data-arbsq-nav] {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    flex-shrink: 0;
+    height: var(--arbsq-header-height);
+    color: #FFF8E1;
+    background: linear-gradient(#2c181099, #2c181099), url('../images/menu_bg.jpg') center / auto 100%;
+    border-bottom: 1px solid #b88c2b;
+    font-family: Inter, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.arbsq-header-inner { max-width: 1280px; height: 100%; padding: 0 24px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+[data-arbsq-nav] a { color: #FFF8E1; text-decoration: none; }
+[data-arbsq-nav] a:hover, [data-arbsq-nav] summary:hover, [data-arbsq-nav] [aria-current], [data-arbsq-nav] .arbsq-active { color: #FFD054; }
+[data-arbsq-nav] :focus-visible { outline: 2px solid #FFD054; outline-offset: 4px; }
+.arbsq-brand { display: flex; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+.arbsq-brand img { height: 36px; width: auto; display: block; }
+.arbsq-brand span { color: #FFD054; font: 700 22px/1 Amiri, Georgia, serif; }
+.arbsq-main-nav { display: flex; align-items: center; gap: 30px; }
+.arbsq-main-nav > a { padding: 10px 0; }
+.arbsq-tools { position: relative; margin: 0; padding: 0; }
+[data-arbsq-nav] summary { display: flex; align-items: center; gap: 8px; padding: 10px 0; list-style: none; cursor: pointer; font: inherit; }
+[data-arbsq-nav] summary::-webkit-details-marker { display: none; }
+[data-arbsq-nav] summary::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-top: -3px; }
+.arbsq-tools-list { position: absolute; top: calc(100% + 6px); right: 0; width: 240px; padding: 6px; border: 1px solid #E8D5B7; border-radius: 6px; background: #FFFDF5; box-shadow: 0 6px 18px #2c181026; }
+[data-arbsq-nav] .arbsq-tools-list a { display: block; padding: 11px 12px; color: #2C1810; border-radius: 3px; }
+[data-arbsq-nav] .arbsq-tools-list a:hover, [data-arbsq-nav] .arbsq-tools-list [aria-current] { background: #FFF0BF; color: #5E4305; }
+[data-arbsq-nav] .arbsq-tools-list a:last-child { border-top: 1px solid #E8D5B7; margin-top: 4px; }
+[data-arbsq-nav] .arbsq-tools-list :focus-visible { outline-color: #9A6F08; outline-offset: -2px; }
+.arbsq-menu-toggle { display: none; border: 1px solid #c4a872; border-radius: 4px; background: transparent; color: #FFF8E1; padding: 5px 12px; font: inherit; cursor: pointer; }
+.arbsq-tool-nav { position: sticky; top: var(--arbsq-header-height); z-index: 20; height: var(--arbsq-tool-nav-height); flex-shrink: 0; background: #FFFDF5; border-bottom: 1px solid #E8D5B7; font: 13px/1.5 Inter, Arial, sans-serif; }
+.arbsq-tool-nav-inner { max-width: 1280px; padding: 0 24px; margin: 0 auto; height: 100%; display: flex; align-items: center; gap: 24px; }
+.arbsq-tool-name { font-weight: 700; color: #2C1810; margin-right: auto; }
+.arbsq-tool-nav a { align-self: stretch; display: flex; align-items: center; color: #795035; text-decoration: none; border-bottom: 2px solid transparent; }
+.arbsq-tool-nav a:hover, .arbsq-tool-nav [aria-current] { color: #5E4305; border-bottom-color: #9A6F08; }
+.arbsq-tool-nav :focus-visible { outline: 2px solid #9A6F08; outline-offset: 2px; }
+/* Section links on the landing page should clear the shared header. */
+html { scroll-padding-top: var(--arbsq-header-height); }
+@media (max-width: 640px) {
+    .arbsq-header-inner { padding: 0 16px; gap: 16px; }
+    .arbsq-menu-toggle { display: block; }
+    .arbsq-main-nav { display: none; position: absolute; top: var(--arbsq-header-height); left: 0; right: 0; max-height: calc(100vh - var(--arbsq-header-height)); overflow-y: auto; padding: 12px 16px; background: #2C1810; border-bottom: 1px solid #b88c2b; box-shadow: 0 6px 12px #2c181026; }
+    .arbsq-main-nav.arbsq-expanded { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+    .arbsq-tools-list { position: static; width: 100%; margin: 4px 0 8px; box-shadow: none; }
+    .arbsq-tool-nav-inner { padding: 0 16px; gap: 18px; }
+}
