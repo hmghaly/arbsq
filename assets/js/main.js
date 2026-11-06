@@ -1,28 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const mobileBtn = document.getElementById('mobileMenuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-
-    mobileBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('open');
-    });
-
-    // Close mobile menu on link click
-    mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.classList.remove('open');
-        });
-    });
-
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 10) {
-            navbar.classList.add('shadow-lg', 'shadow-black/20');
-        } else {
-            navbar.classList.remove('shadow-lg', 'shadow-black/20');
-        }
-    });
-
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
