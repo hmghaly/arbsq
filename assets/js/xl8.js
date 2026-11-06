@@ -119,7 +119,7 @@ function setupDashboard() {
         if (!projects.length) {
             const empty = element('div', undefined, 'empty-state');
             empty.append(element('h2', 'Your next translation starts here'), element('p', 'Add source text or a TXT document to create your first project.'));
-            const link = element('a', 'Create a project', 'button primary'); link.href = 'index.html'; empty.append(link);
+            const link = element('a', 'New translation', 'button primary'); link.href = 'index.html'; empty.append(link);
             $('project-list').append(empty);
             return;
         }
@@ -183,6 +183,7 @@ function setupEditor() {
     function finishPending(result) {
         $('pending-dialog').close();
         const resolve = pendingResolve; pendingResolve = null;
+        if (!result) inlineEditor?.focus();
         if (resolve) resolve(result);
     }
     function resolveDraft() {
@@ -274,9 +275,11 @@ function setupEditor() {
     });
     $('cancel-export').addEventListener('click', () => $('export-dialog').close());
     $('confirm-export').addEventListener('click', () => { $('export-dialog').close(); download(); });
-    document.querySelectorAll('a[href]').forEach(link => link.addEventListener('click', async event => {
+    document.addEventListener('click', async event => {
+        const link = event.target.closest('a[href]');
+        if (!link) return;
         if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !isDirty()) return;
         event.preventDefault(); if (await resolveDraft()) location.href = link.href;
-    }));
+    });
     window.addEventListener('beforeunload', event => { if (isDirty()) { event.preventDefault(); event.returnValue = ''; } });
 }

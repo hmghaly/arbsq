@@ -11,16 +11,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/xl8.css">
     <script type="module" src="../../assets/js/xl8.js"></script>
+    <link rel="stylesheet" href="../../assets/css/site-nav.css">
+    <script defer src="../../assets/js/site-nav.js"></script>
 </head>
 <body data-page="editor">
     <a class="skip-link" href="#main">Skip to content</a>
-    <header class="site-header">
-        <a class="brand" href="../../index.html"><img src="../../assets/images/logo.png" alt="ARBSQ"><span>XL8</span></a>
-        <nav aria-label="Main navigation"><a href="../canvas/">Canvas</a><a href="dashboard.html">Projects</a><a href="index.html">New project</a></nav>
-    </header>
+    <header data-arbsq-nav data-root="../../" data-tool="xl8"><a href="../../index.html">ARBSQ home</a></header>
+    <nav class="arbsq-tool-nav" aria-label="XL8 navigation">
+        <div class="arbsq-tool-nav-inner"><span class="arbsq-tool-name">XL8</span><a href="dashboard.html">Saved projects</a><a href="index.html">New translation</a></div>
+    </nav>
     <main id="main" class="editor-page">
         <div id="error" class="message error editor-error" role="alert" hidden></div>
-        <div id="missing-project" class="page panel" hidden><h1>Project not found</h1><p>This link does not point to a project saved in this browser.</p><a class="button primary" href="dashboard.html">View projects</a></div>
+        <div id="missing-project" class="page panel" hidden><h1>Project not found</h1><p>This link does not point to a project saved in this browser.</p><a class="button primary" href="dashboard.html">View saved projects</a></div>
         <div id="workspace" hidden>
             <div class="workspace-toolbar">
                 <div class="document-heading"><div><p id="project-label" class="context"></p><h1 id="document-title"></h1></div><div class="save-state"><span id="save-status" role="status">Saved in this browser</span><span id="progress"></span></div></div>
