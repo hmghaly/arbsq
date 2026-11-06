@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Translate | XL8 · ARBSQ</title>
+    <meta name="description" content="XL8 translation workspace: prepare text, edit sentence pairs, and export your translation.">
+    <link rel="icon" href="../../assets/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/xl8.css">
+    <script type="module" src="../../assets/js/xl8.js"></script>
+    <link rel="stylesheet" href="../../assets/css/site-nav.css">
+    <script defer src="../../assets/js/site-nav.js"></script>
+</head>
+<body data-page="editor">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header data-arbsq-nav data-root="../../" data-tool="xl8"><a href="../../index.html">ARBSQ home</a></header>
+    <nav class="arbsq-tool-nav" aria-label="XL8 navigation">
+        <div class="arbsq-tool-nav-inner"><span class="arbsq-tool-name">XL8</span><a href="dashboard.html">Saved projects</a><a href="index.html">New translation</a></div>
+    </nav>
+    <main id="main" class="editor-page">
+        <div id="error" class="message error editor-error" role="alert" hidden></div>
+        <div id="missing-project" class="page panel" hidden><h1>Project not found</h1><p>This link does not point to a project saved in this browser.</p><a class="button primary" href="dashboard.html">View saved projects</a></div>
+        <div id="workspace" hidden>
+            <div class="workspace-toolbar">
+                <div class="document-heading"><div><p id="project-label" class="context"></p><h1 id="document-title"></h1></div><div class="save-state"><span id="save-status" role="status">Saved in this browser</span><span id="progress"></span></div></div>
+                <div class="toolbar-actions"><div id="language-pair" class="language-pair"></div><button type="button" class="button primary" id="export">Export translation</button></div>
+            </div>
+            <details class="project-settings"><summary>Project settings</summary><dl><div><dt>Model</dt><dd id="saved-model"></dd></div><div><dt>Additional prompt</dt><dd id="saved-prompt"></dd></div></dl><p class="help">Model and prompt are saved settings. Live translation is not connected.</p></details>
+            <p class="editor-hint">Select a source or target sentence to edit its translation. Apply saves your changes.</p>
+            <div class="table-scroll"><table class="translation-table"><caption class="sr-only">Source sentences and editable target translations</caption><thead><tr><th scope="col" class="number-column">#</th><th scope="col" id="source-heading">Source</th><th scope="col" id="target-heading">Target</th></tr></thead><tbody id="segments"></tbody></table></div>
+        </div>
+        <dialog id="segment-dialog" aria-labelledby="segment-dialog-title">
+            <div class="dialog-heading"><div><p class="context">Segment resources</p><h2 id="segment-dialog-title">Translation options</h2></div><button type="button" class="button" id="close-resources" aria-label="Close segment resources">Close</button></div>
+            <div class="resource-context"><h3>Source</h3><p id="modal-source"></p><label for="modal-target">Target translation</label><textarea id="modal-target" rows="3"></textarea></div>
+            <p class="notice">Sample content only. Suggestions and terminology are not generated from your model or prompt.</p>
+            <div class="resource-grid"><section><h3>Translation options</h3><div id="suggestions"></div></section><section class="terminology"><h3>Terminology</h3><div id="terms"></div></section></div>
+            <div class="dialog-actions"><button type="button" class="button" id="cancel-resources">Cancel</button><button type="button" class="button primary" id="apply-resources">Apply translation</button></div>
+        </dialog>
+        <dialog id="pending-dialog" aria-labelledby="pending-title"><h2 id="pending-title">Apply this translation?</h2><p>You have unapplied changes in the current segment.</p><div class="dialog-actions"><button type="button" class="button" id="keep-editing">Keep editing</button><button type="button" class="button" id="discard-draft">Discard changes</button><button type="button" class="button primary" id="save-draft">Apply and continue</button></div></dialog>
+        <dialog id="export-dialog" aria-labelledby="export-title"><h2 id="export-title">Some segments are untranslated</h2><p id="export-warning"></p><div class="dialog-actions"><button type="button" class="button" id="cancel-export">Continue editing</button><button type="button" class="button primary" id="confirm-export">Export incomplete translation</button></div></dialog>
+    </main>
+    <footer class="site-footer">ARBSQ · XL8 translation workspace<span>Projects are saved in this browser only.</span></footer>
+</body>
+</html>

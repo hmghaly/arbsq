@@ -75,56 +75,16 @@
     </script>
 
 
+    <link rel="stylesheet" href="./assets/css/site-nav.css">
+    <script defer src="./assets/js/site-nav.js"></script>
 </head>
 
 <body class="font-body text-arabesque-dark">
 
     <!-- TOP NAVIGATION BAR                                  -->
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-shadow duration-300"
-        style="background: url('assets/images/menu_bg.jpg') repeat-x center; background-size: auto 100%;">
-        <div class="absolute inset-0 bg-arabesque-dark/60"></div>
-
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between  h-14">
-                <a href="#hero" class="flex items-center gap-2">
-                    <img src="assets/images/logo.png" alt="ARBSQ Logo" class="h-9 w-auto">
-                    <span class="font-display text-xl font-bold text-gold-400 tracking-wide">ARBSQ</span>
-                </a>
-
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="#tools"
-                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Projects
-                        & Tools</a>
-                    <a href="#research"
-                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Research</a>
-                    <a href="#tutorials"
-                        class="nav-link text-cream-100 hover:text-gold-400 text-sm font-medium tracking-wide transition-colors">Tutorials</a>
-                </div>
-
-                <button id="mobileMenuBtn" class="md:hidden text-cream-100 hover:text-gold-400 transition-colors"
-                    aria-label="Toggle navigation menu">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
-
-            <div id="mobileMenu" class="mobile-menu md:hidden">
-                <div class="pb-4 space-y-2">
-                    <a href="#tools"
-                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Projects
-                        & Tools</a>
-                    <a href="#research"
-                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Research</a>
-                    <a href="#tutorials"
-                        class="block text-cream-100 hover:text-gold-400 text-sm font-medium py-2 transition-colors">Tutorials</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <header data-arbsq-nav data-root="./"><a href="./index.html">ARBSQ home</a></header>
     <!-- HERO SECTION                                        -->
-    <section id="hero" class="relative min-h-[92vh] flex items-center justify-center pt-14"
+    <section id="hero" class="relative min-h-[92vh] flex items-center justify-center"
         style="background: url('assets/images/bg.jpg') repeat center; background-size: cover;">
         <div class="absolute inset-0 bg-gradient-to-b from-cream-50/30 via-transparent to-cream-50/70"></div>
 
@@ -165,7 +125,7 @@
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
                 <h2 class="section-title font-display text-3xl sm:text-4xl font-bold text-arabesque-dark">
-                    Projects &amp; Tools
+                    Tools
                 </h2>
                 <p class="mt-5 text-arabesque-copper max-w-xl mx-auto">
                     Explore our growing suite of tools for language analysis, translation, and learning.
@@ -281,6 +241,19 @@
                                 <span class="tag-pill">NLP</span>
                                 <span class="tag-pill">Translation</span>
                             </div>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- XL8 Computer Assisted Translation -->
+                <a href="projects/xl8/dashboard.html" class="project-card glass rounded-2xl p-6 border border-gold-200/60 block group" data-tags="nlp,translation">
+                    <div class="flex items-start gap-4">
+                        <div class="icon-glow flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-md" aria-hidden="true">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h7M4 19h7m4-7 3 7 3-7m-6 4h6" /></svg>
+                        </div>
+                        <div><h3 class="font-semibold text-arabesque-dark group-hover:text-gold-600 transition-colors text-base">XL8 Translation Workspace</h3>
+                            <p class="mt-1 text-sm text-arabesque-copper/80">Translate text sentence by sentence, save your work, and export your translation.</p>
+                            <div class="flex flex-wrap gap-1.5 mt-3"><span class="tag-pill">Translation</span><span class="tag-pill">Arabic</span></div>
                         </div>
                     </div>
                 </a>
@@ -738,7 +711,7 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js?v=20261106"></script>
     <script>
         const copyright = document.getElementById('copyright');
         const currentYear = new Date().getFullYear();
