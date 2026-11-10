@@ -1,5 +1,5 @@
 :root { color-scheme: light; --ink:#2C1810; --copper:#795035; --gold:#D4A017; --cream:#FFFDF5; --line:#E8D5B7; --soft:#FFF8E1; }
-* { box-sizing:border-box; }
+* { box-sizing:border-box; -webkit-user-select:text; user-select:text; }
 body { margin:0; color:var(--ink); font-family:Inter,Arial,sans-serif; font-size:15px; line-height:1.6; background:linear-gradient(#fffdf5ed,#fffdf5ed),url('../images/bg.jpg') center/cover fixed; min-height:100vh; display:flex; flex-direction:column; }
 [hidden] { display:none !important; }
 a { color:var(--copper); text-underline-offset:3px; }
@@ -70,7 +70,8 @@ fieldset { padding:0; border:0; margin:0 0 24px; min-width:0; }
 .translation-table td+td { border-left:1px solid var(--line); }
 .translation-table .segment-number { padding:15px 6px; text-align:center; color:var(--copper); font-size:12px; }
 .cell-text { display:block; width:100%; min-height:70px; padding:15px 18px; border:0; background:transparent; color:inherit; text-align:start; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
-.cell-text:hover { background:#d4a01710; }
+.cell-text { cursor:text; }
+.edit-translation { margin:0 18px 12px; font-family:Inter,Arial,sans-serif; }
 .target-placeholder { color:#795035; font-style:italic; font-size:13px; }
 .translation-table tr.active td { background:#fff0bf; }
 .translation-table tr.active .xl8-target { box-shadow:inset 3px 0 #9A6F08; }
@@ -105,7 +106,7 @@ dialog::backdrop { background:#2c181080; }
     .toolbar-actions { gap:8px; } .toolbar-actions .button { padding:8px 10px; } .language-pair { font-size:12px; }
     .project-settings,.editor-hint { width:calc(100% - 32px); }
     .translation-table { width:calc(100% - 16px); } .translation-table th { padding:10px 8px; } .translation-table th.number-column { width:30px; }
-    .cell-text { padding:12px 9px; font-size:13px; } .inline-editor { padding:8px; } .segment-menu { align-items:stretch; } .inline-editor textarea { padding:8px; }
+    .cell-text { padding:12px 9px; font-size:13px; } .edit-translation { margin:0 9px 12px; } .inline-editor { padding:8px; } .segment-menu { align-items:stretch; } .inline-editor textarea { padding:8px; }
     .resource-grid { grid-template-columns:1fr; gap:20px; } .terminology { border-left:0; border-top:1px solid var(--line); padding:16px 0 0; }
     .site-footer { flex-direction:column; gap:5px; }
     .project-table th,.project-table td { padding:12px; } .project-table { min-width:620px; }

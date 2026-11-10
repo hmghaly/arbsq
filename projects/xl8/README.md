@@ -6,6 +6,10 @@ HTML attributes, for example `onclick="create_project()"` and
 `submit_project(event)` so pressing Enter also works. Dynamic sentence buttons
 receive the same explicit attributes when the table is rendered.
 
+Source sentences and saved target sentences are selectable text. Use the separate
+Translate/Edit button to open a target editor; selecting or copying document text
+does not activate editing or discard a draft.
+
 ## Where to work
 
 | File | Responsibility |
