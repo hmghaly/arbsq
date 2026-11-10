@@ -1,285 +1,362 @@
-import { LANGUAGES, MODELS, MAX_TEXT_BYTES, SAMPLE_TEXT, direction, cellId, exportTranslation, exportFilename, sampleResources } from './xl8-text.js';
-import { createProject, projectStore } from './xl8-projects.js';
+import { LANGUAGES, MODELS, SAMPLE_TEXT, direction, exportTranslation, exportFilename, sampleResources, split_text, normalize_text_items } from './xl8-text.js';
+import { createProject, normalize_project, upload_project, load_project, list_projects } from './xl8-projects.js';
 
+// Shared page state is explicit; handlers and reusable functions are top-level.
+const xl8_state = {
+    inputMethod: 'paste', project: null, activeId: null, draft: '', modalSnapshot: '',
+    inlineEditor: null, rows: new Map(), pendingResolve: null, options: [], saving: false, creating: false
+};
 const $ = id => document.getElementById(id);
-const errorBox = $('error');
-function showError(error) {
-    errorBox.textContent = error.message || String(error);
-    errorBox.hidden = false;
-    const dialog = document.querySelector('dialog[open]');
-    if (dialog) {
-        let message = dialog.querySelector('.dialog-error');
-        if (!message) {
-            message = element('p', undefined, 'message error dialog-error');
-            message.setAttribute('role', 'alert');
-            dialog.prepend(message);
-        }
-        message.textContent = errorBox.textContent;
-        message.scrollIntoView({ block: 'nearest' });
-    } else errorBox.scrollIntoView({ block: 'nearest' });
-}
-function clearError() {
-    errorBox.hidden = true; errorBox.textContent = '';
-    document.querySelectorAll('.dialog-error').forEach(message => message.remove());
-}
+
 function element(tag, text, className) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
     if (className) node.className = className;
     return node;
 }
-function button(text, action, className = 'button') {
+
+function action_button(text, handler, className = 'button') {
     const node = element('button', text, className);
     node.type = 'button';
-    node.addEventListener('click', action);
+    node.setAttribute('onclick', handler);
     return node;
 }
-function setLanguage(node, language) { node.lang = language; node.dir = direction(language); }
-let store;
-try { store = projectStore(window.localStorage); }
-catch { showError(new Error('Browser storage is unavailable. Allow site storage to open or save projects.')); }
 
-if (document.body.dataset.page === 'input') setupInput();
-if (document.body.dataset.page === 'dashboard') setupDashboard();
-if (document.body.dataset.page === 'editor') setupEditor();
+function set_language(node, language) { node.lang = language; node.dir = direction(language); }
 
-function setupInput() {
-    let method = 'paste';
+function show_error(error) {
+    const box = $('error');
+    box.textContent = error.message || String(error);
+    box.hidden = false;
+    const dialog = document.querySelector('dialog[open]');
+    if (!dialog) { box.scrollIntoView({ block: 'nearest' }); return; }
+    let message = dialog.querySelector('.dialog-error');
+    if (!message) {
+        message = element('p', undefined, 'message error dialog-error');
+        message.setAttribute('role', 'alert'); dialog.prepend(message);
+    }
+    message.textContent = box.textContent;
+    message.scrollIntoView({ block: 'nearest' });
+}
+
+function clear_error() {
+    $('error').hidden = true; $('error').textContent = '';
+    document.querySelectorAll('.dialog-error').forEach(message => message.remove());
+}
+
+function setup_input() {
     for (const id of ['source-language', 'target-language']) {
         for (const [value, name] of Object.entries(LANGUAGES)) $(id).add(new Option(name, value));
     }
-    $('source-language').value = 'en';
-    $('target-language').value = 'ar';
+    $('source-language').value = 'en'; $('target-language').value = 'ar';
     MODELS.forEach(model => $('model').add(new Option(model, model)));
-    function changeTab(next, focus = false) {
-        method = next;
-        for (const value of ['paste', 'file']) {
-            const selected = value === method;
-            $(value + '-tab').setAttribute('aria-selected', String(selected));
-            $(value + '-tab').tabIndex = selected ? 0 : -1;
-            $(value + '-panel').hidden = !selected;
-        }
-        if (focus) $(next + '-tab').focus();
+}
+
+function change_input_method(method, focus = false) {
+    xl8_state.inputMethod = method;
+    for (const value of ['paste', 'file']) {
+        const selected = value === method;
+        $(value + '-tab').setAttribute('aria-selected', String(selected));
+        $(value + '-tab').tabIndex = selected ? 0 : -1;
+        $(value + '-panel').hidden = !selected;
     }
-    for (const name of ['paste', 'file']) {
-        $(name + '-tab').addEventListener('click', () => changeTab(name));
-        $(name + '-tab').addEventListener('keydown', event => {
-            if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-                event.preventDefault();
-                changeTab(event.key === 'Home' ? 'paste' : event.key === 'End' ? 'file' : method === 'paste' ? 'file' : 'paste', true);
-            }
-        });
-    }
-    $('source-language').addEventListener('change', () => setLanguage($('source-text'), $('source-language').value));
-    $('source-file').addEventListener('change', () => {
+    if (focus) $(method + '-tab').focus();
+}
+
+function input_tab_key(event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 'paste' : event.key === 'End' ? 'file' : xl8_state.inputMethod === 'paste' ? 'file' : 'paste';
+    change_input_method(next, true);
+}
+
+function update_source_language(language) { set_language($('source-text'), language); }
+function update_file_status(file) { $('file-status').textContent = file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'No file selected.'; }
+
+function load_sample() {
+    change_input_method('paste'); $('source-text').value = SAMPLE_TEXT;
+    $('source-language').value = 'en'; $('target-language').value = 'ar';
+    update_source_language('en'); $('source-text').focus();
+}
+
+/** Read form values and source content. No application text/file-size cap. */
+async function read_project_input() {
+    let text = $('source-text').value;
+    let documentName = 'Pasted text';
+    if (xl8_state.inputMethod === 'file') {
         const file = $('source-file').files[0];
-        $('file-status').textContent = file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'No file selected.';
-    });
-    $('load-sample').addEventListener('click', () => {
-        changeTab('paste');
-        $('source-text').value = SAMPLE_TEXT;
-        $('source-language').value = 'en';
-        $('target-language').value = 'ar';
-        setLanguage($('source-text'), 'en');
-        $('source-text').focus();
-    });
-    $('project-form').addEventListener('submit', async event => {
-        event.preventDefault();
-        clearError();
-        $('create-project').disabled = true;
-        try {
-            if (!store) throw new Error('Browser storage is unavailable. Allow site storage before creating a project.');
-            let text = $('source-text').value;
-            let documentName = 'Pasted text';
-            if (method === 'file') {
-                const file = $('source-file').files[0];
-                if (!file) throw new Error('Choose a TXT file to import.');
-                if (!/\.txt$/i.test(file.name)) throw new Error('Choose a .txt document. Word and PDF files are not supported.');
-                if (file.size > MAX_TEXT_BYTES) throw new Error('This file is larger than 1 MB. Import a smaller text document.');
-                try { text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()); }
-                catch { throw new Error('This file could not be read as UTF-8 text. Save it with UTF-8 encoding and try again.'); }
-                documentName = file.name;
-            }
-            if (!text.trim()) throw new Error('Add some source text before creating a project.');
-            if (new TextEncoder().encode(text).length > MAX_TEXT_BYTES) throw new Error('Source text is larger than 1 MB. Use a smaller document.');
-            const project = createProject({ name: $('project-name').value, documentName, text,
-                sourceLanguage: $('source-language').value, targetLanguage: $('target-language').value,
-                model: $('model').value, prompt: $('prompt').value });
-            store.save(project);
-            location.href = `editor.html?project=${encodeURIComponent(project.id)}`;
-        } catch (error) { showError(error); }
-        finally { $('create-project').disabled = false; }
-    });
+        if (!file) throw new Error('Choose a TXT file to import.');
+        if (!/\.txt$/i.test(file.name)) throw new Error('Choose a .txt document. Word and PDF files are not supported.');
+        try { text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()); }
+        catch { throw new Error('This file could not be read as UTF-8 text. Save it with UTF-8 encoding and try again.'); }
+        documentName = file.name;
+    }
+    if (!text.trim()) throw new Error('Add some source text before creating a project.');
+    if ($('source-language').value === $('target-language').value) throw new Error('Choose two different languages.');
+    return {
+        name: $('project-name').value, documentName, documentId: crypto.randomUUID(), text,
+        sourceLanguage: $('source-language').value, targetLanguage: $('target-language').value,
+        model: $('model').value, prompt: $('prompt').value
+    };
 }
 
-function setupDashboard() {
-    if (!store) return;
+function submit_project(event) { event.preventDefault(); void create_project(); return false; }
+
+/** Orchestrate input → splitter → project JSON → storage confirmation. */
+async function create_project() {
+    if (xl8_state.creating) return null;
+    xl8_state.creating = true; $('create-project').disabled = true; clear_error();
     try {
-        const projects = store.list();
-        if (!projects.length) {
-            const empty = element('div', undefined, 'empty-state');
-            empty.append(element('h2', 'Your next translation starts here'), element('p', 'Add source text or a TXT document to create your first project.'));
-            const link = element('a', 'New translation', 'button primary'); link.href = 'index.html'; empty.append(link);
-            $('project-list').append(empty);
-            return;
-        }
-        const scroll = element('div', undefined, 'table-scroll');
-        const table = element('table', undefined, 'project-table');
-        const caption = element('caption', 'Projects saved in this browser', 'sr-only');
-        const header = element('tr');
-        ['Project / document', 'Languages', 'Progress', 'Updated', ''].forEach(label => {
-            const th = element('th', label); th.scope = 'col'; header.append(th);
-        });
-        const thead = element('thead'); thead.append(header);
-        const tbody = element('tbody');
-        for (const project of projects) {
-            const doc = project.documents[0];
-            const tr = element('tr');
-            const name = element('td'); name.append(element('strong', project.name), element('small', doc.name));
-            const languages = element('td', `${LANGUAGES[project.sourceLanguage]} → ${LANGUAGES[project.targetLanguage]}`);
-            const progress = element('td', `${doc.segments.filter(segment => segment.target.trim()).length} / ${doc.segments.length}`);
-            const updated = element('td'); const time = element('time', new Date(project.updatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })); time.dateTime = project.updatedAt; updated.append(time);
-            const action = element('td'); const link = element('a', 'Open', 'button'); link.href = `editor.html?project=${encodeURIComponent(project.id)}`; link.setAttribute('aria-label', `Open ${project.name}`); action.append(link);
-            tr.append(name, languages, progress, updated, action); tbody.append(tr);
-        }
-        table.append(caption, thead, tbody); scroll.append(table); $('project-list').append(scroll);
-    } catch (error) { showError(error); }
+        const input = await read_project_input();
+        const items = await window.split_text(input.text, input);
+        const project = normalize_project(createProject(input, items));
+        const result = await window.upload_project(project);
+        if (!result?.confirmation?.saved || !result.project?.id) throw new Error('Project creation was not confirmed. Keep your source text and try again.');
+        location.href = `editor.html?project=${encodeURIComponent(result.project.id)}`;
+        return result;
+    } catch (error) { show_error(error); return null; }
+    finally { xl8_state.creating = false; $('create-project').disabled = false; }
 }
 
-function setupEditor() {
-    if (!store) return;
-    let project;
-    try { project = store.load(new URLSearchParams(location.search).get('project')); }
-    catch (error) { showError(error); return; }
-    if (!project) { $('missing-project').hidden = false; return; }
-    const doc = () => project.documents[0];
-    let activeId = null;
-    let draft = '';
-    let inlineEditor = null;
-    let modalSnapshot = '';
-    let pendingResolve = null;
-    const rowNodes = new Map();
-    const segment = () => doc().segments.find(item => item.id === activeId);
-    const isDirty = () => !!segment() && draft !== segment().target;
-    $('workspace').hidden = false;
-    $('project-label').textContent = project.name;
-    $('document-title').textContent = doc().name;
-    document.title = `${project.name} | XL8 · ARBSQ`;
-    $('saved-model').textContent = project.model;
-    $('saved-prompt').textContent = project.prompt || 'No additional prompt';
-    $('language-pair').textContent = `${LANGUAGES[project.sourceLanguage]} → ${LANGUAGES[project.targetLanguage]}`;
-    $('source-heading').textContent = `Source · ${LANGUAGES[project.sourceLanguage]}`;
-    $('target-heading').textContent = `Target · ${LANGUAGES[project.targetLanguage]}`;
-    function updateProgress() { $('progress').textContent = `${doc().segments.filter(item => item.target.trim()).length} of ${doc().segments.length} translated`; }
-    function updateDraft(value) { draft = value; $('save-status').textContent = isDirty() ? 'Unapplied changes' : 'Saved in this browser'; }
-    function saveDraft() {
-        if (!segment() || !isDirty()) return true;
-        const next = structuredClone(project);
-        next.documents[0].segments.find(item => item.id === activeId).target = draft;
-        next.updatedAt = new Date().toISOString();
-        try { store.save(next); project = next; clearError(); $('save-status').textContent = 'Saved in this browser'; updateProgress(); return true; }
-        catch (error) { showError(error); $('save-status').textContent = 'Not saved · apply to retry'; return false; }
+async function deploy_project_list() {
+    const projects = await window.list_projects();
+    const container = $('project-list'); container.replaceChildren();
+    if (!projects.length) {
+        const empty = element('div', undefined, 'empty-state');
+        empty.append(element('h2', 'Your next translation starts here'), element('p', 'Add source text or a TXT document to create your first project.'));
+        const link = element('a', 'New translation', 'button primary'); link.href = 'index.html';
+        link.setAttribute('onclick', 'return navigate_to(this, event)'); empty.append(link); container.append(empty);
+        return projects;
     }
-    function finishPending(result) {
-        $('pending-dialog').close();
-        const resolve = pendingResolve; pendingResolve = null;
-        if (!result) inlineEditor?.focus();
-        if (resolve) resolve(result);
+    const scroll = element('div', undefined, 'table-scroll');
+    const table = element('table', undefined, 'project-table');
+    const header = element('tr');
+    for (const label of ['Project / document', 'Languages', 'Progress', 'Updated', '']) {
+        const th = element('th', label); th.scope = 'col'; header.append(th);
     }
-    function resolveDraft() {
-        if (!isDirty()) return Promise.resolve(true);
-        if (pendingResolve) return Promise.resolve(false);
-        return new Promise(resolve => { pendingResolve = resolve; $('pending-dialog').showModal(); });
+    const thead = element('thead'); thead.append(header);
+    const tbody = element('tbody');
+    for (const project of projects) {
+        const document = project.documents[0]; const tr = element('tr');
+        const name = element('td'); name.append(element('strong', project.name), element('small', document.name));
+        const languages = element('td', `${LANGUAGES[project.sourceLanguage]} → ${LANGUAGES[project.targetLanguage]}`);
+        const progress = element('td', `${document.segments.filter(item => item.trg_text.trim()).length} / ${document.segments.length}`);
+        const updated = element('td');
+        const time = element('time', new Date(project.updatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })); time.dateTime = project.updatedAt; updated.append(time);
+        const action = element('td'); const link = element('a', 'Open', 'button');
+        link.href = `editor.html?project=${encodeURIComponent(project.id)}`; link.setAttribute('aria-label', `Open ${project.name}`);
+        link.setAttribute('onclick', 'return navigate_to(this, event)'); action.append(link);
+        tr.append(name, languages, progress, updated, action); tbody.append(tr);
     }
-    $('keep-editing').addEventListener('click', () => finishPending(false));
-    $('discard-draft').addEventListener('click', () => { draft = segment().target; if (inlineEditor) inlineEditor.value = draft; $('save-status').textContent = 'Saved in this browser'; finishPending(true); });
-    $('save-draft').addEventListener('click', () => { if (saveDraft()) finishPending(true); });
-    $('pending-dialog').addEventListener('cancel', event => { event.preventDefault(); finishPending(false); });
-    function restoreTarget(id) {
-        const item = doc().segments.find(entry => entry.id === id);
-        const nodes = rowNodes.get(id);
-        nodes.row.classList.remove('active');
-        nodes.target.replaceChildren();
-        const targetButton = button(item.target || 'Select to translate', () => selectSegment(id), 'cell-text');
-        setLanguage(targetButton, project.targetLanguage);
-        if (!item.target) targetButton.classList.add('target-placeholder');
-        targetButton.setAttribute('aria-label', `Edit target segment ${nodes.number}`);
-        targetButton.setAttribute('aria-description', item.target || 'No translation yet');
-        nodes.target.append(targetButton);
+    table.append(element('caption', 'Projects saved in this browser', 'sr-only'), thead, tbody);
+    scroll.append(table); container.append(scroll);
+    return projects;
+}
+
+/** Load saved pairs unchanged. A backend may return raw text without segments. */
+async function deploy_translation(translation_id) {
+    const project = await window.load_project(translation_id);
+    if (!project) { $('missing-project').hidden = false; $('workspace').hidden = true; return null; }
+    const document = project.documents[0];
+    if (!Array.isArray(document.segments)) {
+        document.segments = await window.split_text(document.originalText, { ...project, documentId: document.id });
     }
-    async function selectSegment(id) {
-        if (id === activeId) { inlineEditor?.focus(); return; }
-        if (!await resolveDraft()) return;
-        if (activeId) restoreTarget(activeId);
-        activeId = id; draft = segment().target;
-        const nodes = rowNodes.get(id); nodes.row.classList.add('active');
-        const wrapper = element('div', undefined, 'inline-editor');
-        wrapper.lang = 'en'; wrapper.dir = 'ltr';
-        const menu = element('div', undefined, 'segment-menu');
-        const more = button('Show more', openResources); more.setAttribute('aria-haspopup', 'dialog');
-        const actions = element('div', undefined, 'edit-actions');
-        actions.append(button('Cancel', () => { draft = segment().target; $('save-status').textContent = 'Saved in this browser'; const previous = activeId; restoreTarget(previous); activeId = null; inlineEditor = null; rowNodes.get(previous).target.querySelector('button').focus(); }),
-            button('Apply', () => { if (saveDraft()) { const previous = activeId; restoreTarget(previous); activeId = null; inlineEditor = null; rowNodes.get(previous).target.querySelector('button').focus(); } }, 'button primary'));
-        menu.append(more, actions);
-        inlineEditor = element('textarea'); inlineEditor.id = `edit-${activeId}`; inlineEditor.value = draft; setLanguage(inlineEditor, project.targetLanguage);
-        inlineEditor.addEventListener('input', () => updateDraft(inlineEditor.value));
-        const label = element('label', `Target translation · segment ${nodes.number}`); label.htmlFor = inlineEditor.id;
-        wrapper.append(menu, label, inlineEditor); nodes.target.replaceChildren(wrapper); inlineEditor.focus();
-    }
-    for (const [index, item] of doc().segments.entries()) {
+    const normalized = normalize_project(project);
+    $('missing-project').hidden = true; $('workspace').hidden = false;
+    $('project-label').textContent = normalized.name;
+    $('document-title').textContent = normalized.documents[0].name;
+    window.document.title = `${normalized.name} | XL8 · ARBSQ`;
+    $('saved-model').textContent = normalized.model;
+    $('saved-prompt').textContent = normalized.prompt || 'No additional prompt';
+    $('language-pair').textContent = `${LANGUAGES[normalized.sourceLanguage]} → ${LANGUAGES[normalized.targetLanguage]}`;
+    $('source-heading').textContent = `Source · ${LANGUAGES[normalized.sourceLanguage]}`;
+    $('target-heading').textContent = `Target · ${LANGUAGES[normalized.targetLanguage]}`;
+    window.deploy_translation_table(normalized.documents[0].segments, normalized);
+    return normalized;
+}
+
+/** Input: sentence records and project context. Output: the populated table body. */
+function deploy_translation_table(text_items, project_info = xl8_state.project) {
+    if (!project_info) throw new Error('Load a project before displaying its sentence pairs.');
+    const items = normalize_text_items(text_items, project_info.documents[0].id);
+    xl8_state.project = { ...project_info, documents: [{ ...project_info.documents[0], segments: items }] };
+    xl8_state.activeId = null; xl8_state.draft = ''; xl8_state.inlineEditor = null; xl8_state.rows.clear();
+    const tbody = $('segments'); tbody.replaceChildren();
+    for (const [index, item] of items.entries()) {
         const row = element('tr'); row.dataset.segmentId = item.id;
         const number = element('td', String(index + 1), 'segment-number');
-        const source = element('td'); source.id = cellId(doc().id, item.id, 'source'); source.dataset.segmentId = item.id; setLanguage(source, project.sourceLanguage);
-        const sourceButton = button(item.source, () => selectSegment(item.id), 'cell-text'); sourceButton.setAttribute('aria-label', `Edit translation for source segment ${index + 1}`); sourceButton.setAttribute('aria-description', item.source); source.append(sourceButton);
-        const target = element('td', undefined, 'xl8-target'); target.id = cellId(doc().id, item.id, 'target'); target.dataset.segmentId = item.id; target.dataset.sourceId = source.id; setLanguage(target, project.targetLanguage);
-        row.append(number, source, target); $('segments').append(row);
-        rowNodes.set(item.id, { row, source, target, number: index + 1 }); restoreTarget(item.id);
+        const source = element('td'); source.id = item.src_id; source.dataset.segmentId = item.id; set_language(source, project_info.sourceLanguage);
+        const sourceButton = action_button(item.src_text, 'select_segment(this.dataset.segmentId)', 'cell-text');
+        sourceButton.dataset.segmentId = item.id;
+        sourceButton.setAttribute('aria-label', `Edit translation for source segment ${index + 1}`); sourceButton.setAttribute('aria-description', item.src_text); source.append(sourceButton);
+        const target = element('td', undefined, 'xl8-target'); target.id = item.trg_id; target.dataset.segmentId = item.id; target.dataset.sourceId = item.src_id; set_language(target, project_info.targetLanguage);
+        row.append(number, source, target); tbody.append(row);
+        xl8_state.rows.set(item.id, { row, source, target, number: index + 1 }); restore_target(item.id);
     }
-    updateProgress();
-    function openResources() {
-        modalSnapshot = draft;
-        $('modal-source').textContent = segment().source; setLanguage($('modal-source'), project.sourceLanguage);
-        $('modal-target').value = draft; setLanguage($('modal-target'), project.targetLanguage);
-        $('segment-dialog-title').textContent = `Segment ${rowNodes.get(activeId).number} · translation options`;
-        const resources = sampleResources(segment().source, project.sourceLanguage, project.targetLanguage);
-        $('suggestions').replaceChildren(); $('terms').replaceChildren();
-        if (!resources.suggestions.length) $('suggestions').append(element('p', 'No suggestions for this sentence yet. You can write your translation above.', 'help'));
-        resources.suggestions.forEach((suggestion, index) => {
-            const card = element('div', undefined, 'suggestion'); const text = element('p', suggestion); setLanguage(text, project.targetLanguage);
-            card.append(text, button(`Use sample ${index + 1}`, () => { $('modal-target').value = suggestion; syncModalDraft(); $('modal-target').focus(); })); $('suggestions').append(card);
-        });
-        if (!resources.terms.length) $('terms').append(element('p', 'No terminology available for this sentence.', 'help'));
-        resources.terms.forEach(([source, target]) => {
-            const pair = element('div', undefined, 'term-pair'); const sourceTerm = element('span', source); const targetTerm = element('span', target);
-            setLanguage(sourceTerm, project.sourceLanguage); setLanguage(targetTerm, project.targetLanguage); pair.append(sourceTerm, targetTerm); $('terms').append(pair);
-        });
-        $('segment-dialog').showModal();
-    }
-    function syncModalDraft() { updateDraft($('modal-target').value); inlineEditor.value = draft; }
-    function cancelResources() { updateDraft(modalSnapshot); inlineEditor.value = draft; $('segment-dialog').close(); inlineEditor.focus(); }
-    $('modal-target').addEventListener('input', syncModalDraft);
-    $('close-resources').addEventListener('click', cancelResources);
-    $('cancel-resources').addEventListener('click', cancelResources);
-    $('segment-dialog').addEventListener('cancel', event => { event.preventDefault(); cancelResources(); });
-    $('apply-resources').addEventListener('click', () => { if (saveDraft()) { $('segment-dialog').close(); inlineEditor.focus(); } });
-    function download() {
-        const blob = new Blob([exportTranslation(doc().segments)], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob); const link = element('a'); link.href = url; link.download = exportFilename(doc().name === 'Pasted text' ? project.name : doc().name);
-        document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-    $('export').addEventListener('click', async () => {
-        if (!await resolveDraft()) return;
-        const missing = doc().segments.filter(item => !item.target.trim()).length;
-        if (missing) { $('export-warning').textContent = `${missing} of ${doc().segments.length} segments have no translation. Their text will be empty in the exported file.`; $('export-dialog').showModal(); }
-        else download();
-    });
-    $('cancel-export').addEventListener('click', () => $('export-dialog').close());
-    $('confirm-export').addEventListener('click', () => { $('export-dialog').close(); download(); });
-    document.addEventListener('click', async event => {
-        const link = event.target.closest('a[href]');
-        if (!link) return;
-        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !isDirty()) return;
-        event.preventDefault(); if (await resolveDraft()) location.href = link.href;
-    });
-    window.addEventListener('beforeunload', event => { if (isDirty()) { event.preventDefault(); event.returnValue = ''; } });
+    update_progress(); $('save-status').textContent = 'Saved in this browser';
+    return tbody;
 }
+
+function current_document() { return xl8_state.project?.documents[0]; }
+function current_segment() { return current_document()?.segments.find(item => item.id === xl8_state.activeId); }
+function has_unapplied_changes() { return !!current_segment() && xl8_state.draft !== current_segment().trg_text; }
+function update_progress() { $('progress').textContent = `${current_document().segments.filter(item => item.trg_text.trim()).length} of ${current_document().segments.length} translated`; }
+function update_draft(value) { xl8_state.draft = value; $('save-status').textContent = has_unapplied_changes() ? 'Unapplied changes' : 'Saved in this browser'; }
+
+async function save_draft() {
+    if (xl8_state.saving) return false;
+    if (!current_segment() || !has_unapplied_changes()) return true;
+    xl8_state.saving = true;
+    const capturedDraft = xl8_state.draft;
+    const next = structuredClone(xl8_state.project);
+    next.documents[0].segments.find(item => item.id === xl8_state.activeId).trg_text = capturedDraft;
+    next.updatedAt = new Date().toISOString();
+    try {
+        const result = await window.upload_project(next);
+        if (!result?.confirmation?.saved || !result.project) throw new Error('Translation save was not confirmed. Apply again to retry.');
+        xl8_state.project = normalize_project(result.project); clear_error(); update_progress();
+        if (xl8_state.draft === capturedDraft) {
+            xl8_state.draft = current_segment().trg_text;
+            if (xl8_state.inlineEditor) xl8_state.inlineEditor.value = xl8_state.draft;
+        }
+        $('save-status').textContent = has_unapplied_changes() ? 'Unapplied changes' : 'Saved in this browser';
+        return !has_unapplied_changes();
+    } catch (error) { show_error(error); $('save-status').textContent = 'Not saved · apply to retry'; return false; }
+    finally { xl8_state.saving = false; }
+}
+
+function finish_pending(result) {
+    $('pending-dialog').close();
+    const resolve = xl8_state.pendingResolve; xl8_state.pendingResolve = null;
+    if (!result) xl8_state.inlineEditor?.focus();
+    if (resolve) resolve(result);
+}
+
+async function resolve_draft() {
+    if (xl8_state.saving) return false;
+    if (!has_unapplied_changes()) return true;
+    if (xl8_state.pendingResolve) return false;
+    return new Promise(set_pending_resolver);
+}
+
+function set_pending_resolver(resolve) { xl8_state.pendingResolve = resolve; $('pending-dialog').showModal(); }
+function keep_editing() { if (!xl8_state.saving) finish_pending(false); }
+function cancel_pending(event) { event.preventDefault(); keep_editing(); }
+function discard_draft() { if (xl8_state.saving) return; update_draft(current_segment().trg_text); xl8_state.inlineEditor.value = xl8_state.draft; finish_pending(true); }
+async function apply_and_continue() { if (await save_draft()) finish_pending(true); }
+
+function restore_target(id) {
+    const item = current_document().segments.find(entry => entry.id === id);
+    const nodes = xl8_state.rows.get(id); nodes.row.classList.remove('active'); nodes.target.replaceChildren();
+    const button = action_button(item.trg_text || 'Select to translate', 'select_segment(this.dataset.segmentId)', 'cell-text');
+    button.dataset.segmentId = id; set_language(button, xl8_state.project.targetLanguage);
+    if (!item.trg_text) button.classList.add('target-placeholder');
+    button.setAttribute('aria-label', `Edit target segment ${nodes.number}`); button.setAttribute('aria-description', item.trg_text || 'No translation yet'); nodes.target.append(button);
+}
+
+async function select_segment(id) {
+    if (id === xl8_state.activeId) { xl8_state.inlineEditor?.focus(); return; }
+    if (!await resolve_draft()) return;
+    if (xl8_state.activeId) restore_target(xl8_state.activeId);
+    xl8_state.activeId = id; xl8_state.draft = current_segment().trg_text;
+    const nodes = xl8_state.rows.get(id); nodes.row.classList.add('active');
+    const wrapper = element('div', undefined, 'inline-editor'); wrapper.lang = 'en'; wrapper.dir = 'ltr';
+    const menu = element('div', undefined, 'segment-menu');
+    const more = action_button('Show more', 'open_resources()'); more.setAttribute('aria-haspopup', 'dialog');
+    const actions = element('div', undefined, 'edit-actions');
+    actions.append(action_button('Cancel', 'cancel_edit()'), action_button('Apply', 'apply_edit()', 'button primary')); menu.append(more, actions);
+    const textarea = element('textarea'); textarea.id = `edit-${id}`; textarea.value = xl8_state.draft;
+    textarea.setAttribute('oninput', 'update_draft(this.value)'); set_language(textarea, xl8_state.project.targetLanguage);
+    xl8_state.inlineEditor = textarea;
+    const label = element('label', `Target translation · segment ${nodes.number}`); label.htmlFor = textarea.id;
+    wrapper.append(menu, label, textarea); nodes.target.replaceChildren(wrapper); textarea.focus();
+}
+
+function close_editor() {
+    const previous = xl8_state.activeId; restore_target(previous);
+    xl8_state.activeId = null; xl8_state.inlineEditor = null;
+    xl8_state.rows.get(previous).target.querySelector('button').focus();
+}
+function cancel_edit() { if (xl8_state.saving) return; update_draft(current_segment().trg_text); close_editor(); }
+async function apply_edit() { if (await save_draft()) close_editor(); }
+
+function open_resources() {
+    xl8_state.modalSnapshot = xl8_state.draft;
+    $('modal-source').textContent = current_segment().src_text; set_language($('modal-source'), xl8_state.project.sourceLanguage);
+    $('modal-target').value = xl8_state.draft; set_language($('modal-target'), xl8_state.project.targetLanguage);
+    $('segment-dialog-title').textContent = `Segment ${xl8_state.rows.get(xl8_state.activeId).number} · translation options`;
+    const sample = sampleResources(current_segment().src_text, xl8_state.project.sourceLanguage, xl8_state.project.targetLanguage);
+    const provided = current_segment().translations;
+    xl8_state.options = provided.length ? provided : sample.suggestions.map((text, index) => ({ model: `Sample ${index + 1}`, text, sample: true }));
+    $('resource-note').textContent = provided.length ? 'Translation options supplied with this sentence. Model requests are not made by this page.' : 'Sample content only. Suggestions and terminology are not generated from your model or prompt.';
+    $('suggestions').replaceChildren(); $('terms').replaceChildren();
+    if (!xl8_state.options.length) $('suggestions').append(element('p', 'No suggestions for this sentence yet. You can write your translation above.', 'help'));
+    for (const [index, option] of xl8_state.options.entries()) {
+        const card = element('div', undefined, 'suggestion'); const text = element('p', option.text); set_language(text, xl8_state.project.targetLanguage);
+        const label = option.sample ? `Use sample ${index + 1}` : `Use ${option.model || 'translation option'}`;
+        const button = action_button(label, 'use_translation(Number(this.dataset.optionIndex))'); button.dataset.optionIndex = index;
+        card.append(text, button); $('suggestions').append(card);
+    }
+    const terms = current_segment().terminology || sample.terms.map(([source, target]) => ({ source, target }));
+    if (!terms.length) $('terms').append(element('p', 'No terminology available for this sentence.', 'help'));
+    for (const term of terms) {
+        const pair = element('div', undefined, 'term-pair'); const source = element('span', term.source); const target = element('span', term.target);
+        set_language(source, xl8_state.project.sourceLanguage); set_language(target, xl8_state.project.targetLanguage); pair.append(source, target); $('terms').append(pair);
+    }
+    $('segment-dialog').showModal();
+}
+
+function sync_modal_draft(value) { update_draft(value); xl8_state.inlineEditor.value = value; }
+function use_translation(index) { $('modal-target').value = xl8_state.options[index].text; sync_modal_draft($('modal-target').value); $('modal-target').focus(); }
+function cancel_resources() { if (xl8_state.saving) return; update_draft(xl8_state.modalSnapshot); xl8_state.inlineEditor.value = xl8_state.draft; $('segment-dialog').close(); xl8_state.inlineEditor.focus(); }
+function cancel_resources_event(event) { event.preventDefault(); cancel_resources(); }
+async function apply_resources() { if (await save_draft()) { $('segment-dialog').close(); xl8_state.inlineEditor.focus(); } }
+
+async function export_translation() {
+    if (!await resolve_draft()) return;
+    const missing = current_document().segments.filter(item => !item.trg_text.trim()).length;
+    if (missing) { $('export-warning').textContent = `${missing} of ${current_document().segments.length} segments have no translation. Their text will be empty in the exported file.`; $('export-dialog').showModal(); }
+    else download_translation();
+}
+
+function download_translation() {
+    const document = current_document();
+    const blob = new Blob([exportTranslation(document.segments)], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob); const link = element('a'); link.href = url;
+    link.download = exportFilename(document.name === 'Pasted text' ? xl8_state.project.name : document.name);
+    window.document.body.append(link); link.click(); link.remove(); setTimeout(release_download, 1000, url);
+}
+function release_download(url) { URL.revokeObjectURL(url); }
+function cancel_export() { $('export-dialog').close(); }
+function confirm_export() { cancel_export(); download_translation(); }
+
+/** Synchronous HTML link handler; async draft resolution happens before navigation. */
+function navigate_to(link, event) {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !has_unapplied_changes()) return true;
+    const url = new URL(link.href, location.href);
+    if (url.pathname === location.pathname && url.search === location.search && url.hash) return true;
+    event.preventDefault(); void continue_navigation(link.href); return false;
+}
+async function continue_navigation(href) { if (await resolve_draft()) location.href = href; }
+function warn_unapplied(event) { if (has_unapplied_changes()) { event.preventDefault(); event.returnValue = ''; return ''; } }
+
+async function initialize_xl8() {
+    try {
+        if (document.body.dataset.page === 'input') setup_input();
+        if (document.body.dataset.page === 'dashboard') await deploy_project_list();
+        if (document.body.dataset.page === 'editor') await deploy_translation(new URLSearchParams(location.search).get('project'));
+    } catch (error) { show_error(error); }
+}
+
+// Inline HTML handlers need explicit global names when using module scripts.
+// Replacing these async functions is the supported backend integration seam.
+Object.assign(window, {
+    create_project, submit_project, upload_project, load_project, list_projects, split_text,
+    deploy_translation, deploy_translation_table, deploy_project_list, read_project_input,
+    change_input_method, input_tab_key, update_source_language, update_file_status, load_sample,
+    select_segment, update_draft, apply_edit, cancel_edit, open_resources, sync_modal_draft,
+    use_translation, cancel_resources, cancel_resources_event, apply_resources,
+    keep_editing, discard_draft, apply_and_continue, cancel_pending, export_translation,
+    cancel_export, confirm_export, navigate_to, warn_unapplied
+});
+void initialize_xl8();
