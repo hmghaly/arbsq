@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/xl8.css">
-    <script type="module" src="../../assets/js/xl8.js?v=20261110"></script>
+    <link rel="stylesheet" href="../../assets/css/xl8.css?v=20261110-selection">
+    <script type="module" src="../../assets/js/xl8.js?v=20261110-selection"></script>
     <link rel="stylesheet" href="../../assets/css/site-nav.css">
     <script defer src="../../assets/js/site-nav.js?v=20261110"></script>
 </head>
@@ -29,7 +29,7 @@
                 <div class="toolbar-actions"><div id="language-pair" class="language-pair"></div><button type="button" class="button primary" id="export" onclick="export_translation()">Export translation</button></div>
             </div>
             <details class="project-settings"><summary>Project settings</summary><dl><div><dt>Model</dt><dd id="saved-model"></dd></div><div><dt>Additional prompt</dt><dd id="saved-prompt"></dd></div></dl><p class="help">Model and prompt are saved settings. Live translation is not connected.</p></details>
-            <p class="editor-hint">Select a source or target sentence to edit its translation. Apply saves your changes.</p>
+            <p class="editor-hint">Select text to copy it. Use Translate or Edit to change a target sentence. Apply saves your changes.</p>
             <div class="table-scroll"><table class="translation-table"><caption class="sr-only">Source sentences and editable target translations</caption><thead><tr><th scope="col" class="number-column">#</th><th scope="col" id="source-heading">Source</th><th scope="col" id="target-heading">Target</th></tr></thead><tbody id="segments"></tbody></table></div>
         </div>
         <dialog id="segment-dialog" oncancel="cancel_resources_event(event)" aria-labelledby="segment-dialog-title">

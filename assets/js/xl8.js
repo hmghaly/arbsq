@@ -186,9 +186,8 @@ function deploy_translation_table(text_items, project_info = xl8_state.project) 
         const row = element('tr'); row.dataset.segmentId = item.id;
         const number = element('td', String(index + 1), 'segment-number');
         const source = element('td'); source.id = item.src_id; source.dataset.segmentId = item.id; set_language(source, project_info.sourceLanguage);
-        const sourceButton = action_button(item.src_text, 'select_segment(this.dataset.segmentId)', 'cell-text');
-        sourceButton.dataset.segmentId = item.id;
-        sourceButton.setAttribute('aria-label', `Edit translation for source segment ${index + 1}`); sourceButton.setAttribute('aria-description', item.src_text); source.append(sourceButton);
+        // Document text is content, not a button: selecting it must not move focus.
+        source.append(element('div', item.src_text, 'cell-text'));
         const target = element('td', undefined, 'xl8-target'); target.id = item.trg_id; target.dataset.segmentId = item.id; target.dataset.sourceId = item.src_id; set_language(target, project_info.targetLanguage);
         row.append(number, source, target); tbody.append(row);
         xl8_state.rows.set(item.id, { row, source, target, number: index + 1 }); restore_target(item.id);
@@ -248,10 +247,12 @@ async function apply_and_continue() { if (await save_draft()) finish_pending(tru
 function restore_target(id) {
     const item = current_document().segments.find(entry => entry.id === id);
     const nodes = xl8_state.rows.get(id); nodes.row.classList.remove('active'); nodes.target.replaceChildren();
-    const button = action_button(item.trg_text || 'Select to translate', 'select_segment(this.dataset.segmentId)', 'cell-text');
-    button.dataset.segmentId = id; set_language(button, xl8_state.project.targetLanguage);
-    if (!item.trg_text) button.classList.add('target-placeholder');
-    button.setAttribute('aria-label', `Edit target segment ${nodes.number}`); button.setAttribute('aria-description', item.trg_text || 'No translation yet'); nodes.target.append(button);
+    const text = element('div', item.trg_text || 'No translation yet', 'cell-text');
+    if (!item.trg_text) { text.classList.add('target-placeholder'); set_language(text, 'en'); }
+    const button = action_button(item.trg_text ? 'Edit' : 'Translate', 'select_segment(this.dataset.segmentId)', 'button edit-translation');
+    button.dataset.segmentId = id; set_language(button, 'en');
+    button.setAttribute('aria-label', `Edit target segment ${nodes.number}`);
+    nodes.target.append(text, button);
 }
 
 async function select_segment(id) {
