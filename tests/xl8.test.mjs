@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { segmentText, exportTranslation, cellId, sampleResources, exportFilename } from '../assets/js/xl8-text.js';
-import { createProject, projectStore, STORAGE_KEY } from '../assets/js/xl8-projects.js';
+import { segmentText, exportTranslation, cellId, sampleResources, exportFilename, split_text, normalize_text_items } from '../assets/js/xl8-text.js';
+import { createProject, projectStore, STORAGE_KEY, normalize_project, upload_project, load_project, list_projects } from '../assets/js/xl8-projects.js';
 
 function memoryStorage() {
     const values = new Map();
@@ -82,4 +82,75 @@ test('invalid language pairs, empty documents and duplicate segment IDs are reje
     assert.throws(() => createProject(input({ targetLanguage: 'en' })));
     const project = createProject(input()); project.documents[0].segments[1].id = project.documents[0].segments[0].id;
     assert.throws(() => projectStore(memoryStorage()).save(project), /invalid/);
+});
+
+
+test('public async storage preserves backend sentence IDs, options and additional metadata', async () => {
+    const storage = memoryStorage();
+    const items = [{src_id: 'src-001', src_text: 'Custom splitter result', trg_id: 'trg-001', trg_text: 'ترجمة',
+        translations: [{model: 'gpt', text: 'اقتراح', score: 0.8}], alignment: { paragraph: 7 }, separator: ''}];
+    const project = normalize_project(createProject(input(), items));
+    project.custom = { client: 'Hussein' };
+    const result = await upload_project(project, storage);
+    assert.equal(result.confirmation.saved, true);
+    assert.equal(result.confirmation.project_id, project.id);
+    const loaded = await load_project(project.id, storage);
+    assert.deepEqual(loaded, result.project);
+    loaded.documents[0].segments[0].trg_text = 'ترجمة معدلة';
+    await upload_project(loaded, storage);
+    const reopened = await load_project(project.id, storage);
+    assert.deepEqual(reopened.documents[0].segments[0], {...project.documents[0].segments[0], trg_text: 'ترجمة معدلة'});
+    assert.deepEqual(reopened.custom, project.custom);
+    assert.equal(exportTranslation(reopened.documents[0].segments), 'ترجمة معدلة');
+    assert.equal((await list_projects(storage)).length, 1);
+    assert.equal(await load_project('missing', storage), null);
+    assert.equal(JSON.parse(storage.getItem(STORAGE_KEY))[0].documents[0].segments[0].source, 'Custom splitter result');
+});
+
+test('legacy projects load with original paired IDs and targets without resegmenting', async () => {
+    const storage = memoryStorage();
+    const project = createProject(input());
+    project.documents[0].segments[0].source = 'One sentence. Two sentences.';
+    project.documents[0].segments[0].target = 'محفوظ';
+    projectStore(storage).save(project);
+    const raw = storage.getItem(STORAGE_KEY);
+    const loaded = await load_project(project.id, storage);
+    assert.equal(loaded.documents[0].segments.length, project.documents[0].segments.length);
+    assert.equal(loaded.documents[0].segments[0].src_text, 'One sentence. Two sentences.');
+    assert.equal(loaded.documents[0].segments[0].trg_text, 'محفوظ');
+    assert.equal(loaded.documents[0].segments[0].trg_id, cellId(project.documents[0].id, project.documents[0].segments[0].id, 'target'));
+    assert.equal(storage.getItem(STORAGE_KEY), raw);
+});
+
+test('text above the former 1 MB cap can be split and saved through the public interface', async () => {
+    const storage = memoryStorage();
+    const text = 'x'.repeat(1024 * 1024 + 1);
+    const metadata = input({text, documentId: 'document-001'});
+    const items = split_text(text, metadata);
+    assert.equal(items[0].src_text, text);
+    const result = await upload_project(normalize_project(createProject(metadata, items)), storage);
+    assert.equal((await load_project(result.project.id, storage)).documents[0].originalText, text);
+});
+
+test('normalization rejects duplicate sentence or cell IDs and malformed translation options', () => {
+    const item = {id: 'segment-001', src_id: 'src-001', src_text: 'Text', trg_id: 'trg-001', trg_text: '', translations: []};
+    assert.throws(() => normalize_text_items([item, {...item, src_id: 'src-002', trg_id: 'trg-002'}]), /Invalid/);
+    assert.throws(() => normalize_text_items([item, {...item, id: 'segment-002'}]), /unique/);
+    assert.throws(() => normalize_text_items([{...item, translations: [{model:'gpt'}]}]), /Invalid/);
+    assert.deepEqual(normalize_text_items([item])[0], {...item, separator: ''});
+});
+
+test('async saves reject quota and corrupt-storage errors without overwriting previous data', async () => {
+    const storage = memoryStorage();
+    const project = normalize_project(createProject(input()));
+    await upload_project(project, storage);
+    const previous = storage.getItem(STORAGE_KEY);
+    storage.setItem = () => {throw Error('QuotaExceededError');};
+    project.documents[0].segments[0].trg_text = 'غير محفوظ';
+    await assert.rejects(upload_project(project, storage), /not saved/);
+    assert.equal(storage.getItem(STORAGE_KEY), previous);
+    await assert.rejects(load_project(project.id, {getItem() {throw Error();}}), /unavailable/);
+    const corrupt = memoryStorage(); corrupt.setItem(STORAGE_KEY, '{bad');
+    await assert.rejects(upload_project(project, corrupt), /left untouched/);
+    assert.equal(corrupt.getItem(STORAGE_KEY), '{bad');
 });
