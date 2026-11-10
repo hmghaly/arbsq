@@ -1,6 +1,5 @@
 export const LANGUAGES = { en: 'English', ar: 'Arabic', fr: 'French', de: 'German', es: 'Spanish', zh: 'Chinese', ru: 'Russian', pt: 'Portuguese', ja: 'Japanese', ko: 'Korean', he: 'Hebrew', fa: 'Persian', ur: 'Urdu' };
 export const MODELS = ['Google Translate', 'GPT4.1', 'GPT5.1', 'Deepseek-Flash'];
-export const MAX_TEXT_BYTES = 1024 * 1024;
 export const SAMPLE_TEXT = 'The meeting opens at nine.\n\nPlease bring the report.';
 
 export function direction(language) {
@@ -36,7 +35,7 @@ export function cellId(documentId, segmentId, side) {
 }
 
 export function exportTranslation(segments) {
-    return segments.map(segment => segment.separator + segment.target).join('');
+    return segments.map(segment => segment.separator + (segment.trg_text ?? segment.target ?? '')).join('');
 }
 
 export function exportFilename(name) {
@@ -50,4 +49,46 @@ export function sampleResources(source, sourceLanguage, targetLanguage) {
         'Please bring the report.': { suggestions: ['يرجى إحضار التقرير.', 'يُرجى أن تحضر التقرير معك.'], terms: [['report', 'تقرير']] }
     };
     return samples[source] || { suggestions: [], terms: [] };
+}
+
+/** Public sentence interface. Existing source/target records remain readable. */
+export function normalize_text_items(items, documentId = 'document') {
+    if (!Array.isArray(items) || !items.length) throw new Error('The document must contain at least one sentence.');
+    const usedIds = new Set();
+    const segmentIds = new Set();
+    return items.map((item, index) => {
+        if (!item || typeof item !== 'object') throw new Error('Invalid sentence record.');
+        const id = item.id || item.src_id || crypto.randomUUID();
+        const normalized = {
+            ...item, id,
+            src_id: item.src_id || cellId(documentId, id, 'source'),
+            src_text: item.src_text ?? item.source,
+            trg_id: item.trg_id || cellId(documentId, id, 'target'),
+            trg_text: item.trg_text ?? item.target ?? '',
+            translations: item.translations ?? [],
+            separator: item.separator ?? (index === 0 ? '' : ' ')
+        };
+        delete normalized.source;
+        delete normalized.target;
+        if (typeof id !== 'string' || !/^[a-zA-Z0-9_.:-]+$/.test(id) || segmentIds.has(id)
+            || typeof normalized.src_text !== 'string' || !normalized.src_text.trim()
+            || typeof normalized.trg_text !== 'string' || typeof normalized.separator !== 'string'
+            || !/^\s*$/.test(normalized.separator) || !Array.isArray(normalized.translations)
+            || !normalized.translations.every(option => option && typeof option === 'object' && typeof option.text === 'string')) {
+            throw new Error('Invalid sentence text, translation options, or separator.');
+        }
+        segmentIds.add(id);
+        for (const cell of [normalized.src_id, normalized.trg_id]) {
+            if (typeof cell !== 'string' || !cell || /\s/.test(cell) || usedIds.has(cell)) throw new Error('Sentence cell IDs must be unique and contain no whitespace.');
+            usedIds.add(cell);
+        }
+        return normalized;
+    });
+}
+
+/** Replace this function with an async backend splitter if needed. */
+export function split_text(text, project_info = {}) {
+    const segments = segmentText(text, project_info.sourceLanguage || 'en');
+    if (!segments.length) return [];
+    return normalize_text_items(segments, project_info.documentId || 'document');
 }
