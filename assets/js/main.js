@@ -1,59 +1,25 @@
-document.addEventListener('DOMContentLoaded', () => {
+/** Named HTML handler for the landing-page directory. */
+function filter_tools(tag) {
+    const buttons = document.querySelectorAll('[data-filter]');
+    for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset.filter === tag));
+    let available = 0;
+    let upcoming = 0;
+    for (const tool of document.querySelectorAll('[data-tool]')) {
+        const matches = tag === 'all' || tool.dataset.tags.split(',').includes(tag);
+        tool.hidden = !matches;
+        if (matches && tool.dataset.tool === 'available') available++;
+        if (matches && tool.dataset.tool === 'upcoming') upcoming++;
+    }
+    document.getElementById('tool-result-count').textContent = `${available} ${available === 1 ? 'tool' : 'tools'} available`;
+    document.getElementById('tool-empty').hidden = available !== 0;
+    document.getElementById('upcoming-count').textContent = `${upcoming} ${upcoming === 1 ? 'tool' : 'tools'}`;
+    const details = document.getElementById('upcoming-tools');
+    details.hidden = upcoming === 0;
+    details.open = tag !== 'all' && upcoming > 0;
+}
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-fade-in-up');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.1 });
+function initialize_home() {
+    document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} ARBSQ. All rights reserved.`;
+}
 
-    document.querySelectorAll('.project-card, .tutorial-card').forEach((card, i) => {
-        card.style.animationDelay = `${i * 0.07}s`;
-        card.style.opacity = '0';
-        observer.observe(card);
-    });
-
-    const subscribeForm = document.getElementById('subscribeForm');
-    subscribeForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = document.getElementById('subscribeEmail').value;
-        const success = document.getElementById('subscribeSuccess');
-        //TODO: integrate Mailchimp
-        console.log('Subscribe:', email);
-        success.classList.remove('hidden');
-        this.querySelector('button').textContent = 'Subscribed!';
-        this.querySelector('button').disabled = true;
-        this.querySelector('button').classList.add('opacity-60', 'cursor-not-allowed');
-    });
-
-    // Tag filtering
-    const filterBtns = document.querySelectorAll('.tag-filter-btn');
-    const projectCards = document.querySelectorAll('#projectGrid .project-card');
-
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tag = btn.dataset.tag;
-
-            // Update active button
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Filter cards
-            projectCards.forEach(card => {
-                if (tag === 'all') {
-                    card.classList.remove('tag-hidden');
-                } else {
-                    const cardTags = (card.dataset.tags || '').split(',');
-                    if (cardTags.includes(tag)) {
-                        card.classList.remove('tag-hidden');
-                    } else {
-                        card.classList.add('tag-hidden');
-                    }
-                }
-            });
-        });
-    });
-
-});
+initialize_home();
