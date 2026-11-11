@@ -1,5 +1,6 @@
 import { LANGUAGES, MODELS, SAMPLE_TEXT, direction, exportTranslation, exportFilename, sampleResources, split_text, normalize_text_items } from './xl8-text.js';
 import { createProject, normalize_project, upload_project, load_project, list_projects } from './xl8-projects.js';
+import { read_word_file } from './xl8-word.js';
 
 // Shared page state is explicit; handlers and reusable functions are top-level.
 const xl8_state = {
@@ -7,6 +8,7 @@ const xl8_state = {
     inlineEditor: null, rows: new Map(), pendingResolve: null, options: [], saving: false, creating: false
 };
 const $ = id => document.getElementById(id);
+const INPUT_METHODS = ['paste', 'file', 'word'];
 
 function element(tag, text, className) {
     const node = document.createElement(tag);
@@ -54,7 +56,7 @@ function setup_input() {
 
 function change_input_method(method, focus = false) {
     xl8_state.inputMethod = method;
-    for (const value of ['paste', 'file']) {
+    for (const value of INPUT_METHODS) {
         const selected = value === method;
         $(value + '-tab').setAttribute('aria-selected', String(selected));
         $(value + '-tab').tabIndex = selected ? 0 : -1;
@@ -66,12 +68,14 @@ function change_input_method(method, focus = false) {
 function input_tab_key(event) {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
-    const next = event.key === 'Home' ? 'paste' : event.key === 'End' ? 'file' : xl8_state.inputMethod === 'paste' ? 'file' : 'paste';
-    change_input_method(next, true);
+    const current = INPUT_METHODS.indexOf(xl8_state.inputMethod);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? INPUT_METHODS.length - 1
+        : (current + (event.key === 'ArrowRight' ? 1 : -1) + INPUT_METHODS.length) % INPUT_METHODS.length;
+    change_input_method(INPUT_METHODS[next], true);
 }
 
 function update_source_language(language) { set_language($('source-text'), language); }
-function update_file_status(file) { $('file-status').textContent = file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'No file selected.'; }
+function update_file_status(file, method = 'file') { $(method + '-status').textContent = file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'No file selected.'; }
 
 function load_sample() {
     change_input_method('paste'); $('source-text').value = SAMPLE_TEXT;
@@ -86,9 +90,14 @@ async function read_project_input() {
     if (xl8_state.inputMethod === 'file') {
         const file = $('source-file').files[0];
         if (!file) throw new Error('Choose a TXT file to import.');
-        if (!/\.txt$/i.test(file.name)) throw new Error('Choose a .txt document. Word and PDF files are not supported.');
+        if (!/\.txt$/i.test(file.name)) throw new Error('Choose a .txt document, or use the Word file tab for .docx files.');
         try { text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()); }
         catch { throw new Error('This file could not be read as UTF-8 text. Save it with UTF-8 encoding and try again.'); }
+        documentName = file.name;
+    }
+    if (xl8_state.inputMethod === 'word') {
+        const file = $('word-file').files[0];
+        text = await window.read_word_file(file);
         documentName = file.name;
     }
     if (!text.trim()) throw new Error('Add some source text before creating a project.');
@@ -105,7 +114,7 @@ function submit_project(event) { event.preventDefault(); void create_project(); 
 /** Orchestrate input → splitter → project JSON → storage confirmation. */
 async function create_project() {
     if (xl8_state.creating) return null;
-    xl8_state.creating = true; $('create-project').disabled = true; clear_error();
+    xl8_state.creating = true; $('create-project').disabled = true; $('create-project').textContent = 'Reading source…'; clear_error();
     try {
         const input = await read_project_input();
         const items = await window.split_text(input.text, input);
@@ -115,7 +124,7 @@ async function create_project() {
         location.href = `editor.html?project=${encodeURIComponent(result.project.id)}`;
         return result;
     } catch (error) { show_error(error); return null; }
-    finally { xl8_state.creating = false; $('create-project').disabled = false; }
+    finally { xl8_state.creating = false; $('create-project').disabled = false; $('create-project').textContent = 'Create project'; }
 }
 
 async function deploy_project_list() {
@@ -352,7 +361,7 @@ async function initialize_xl8() {
 // Inline HTML handlers need explicit global names when using module scripts.
 // Replacing these async functions is the supported backend integration seam.
 Object.assign(window, {
-    create_project, submit_project, upload_project, load_project, list_projects, split_text,
+    create_project, submit_project, upload_project, load_project, list_projects, split_text, read_word_file,
     deploy_translation, deploy_translation_table, deploy_project_list, read_project_input,
     change_input_method, input_tab_key, update_source_language, update_file_status, load_sample,
     select_segment, update_draft, apply_edit, cancel_edit, open_resources, sync_modal_draft,

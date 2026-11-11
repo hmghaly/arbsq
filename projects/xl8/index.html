@@ -10,7 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/xl8.css?v=20261110-selection">
-    <script type="module" src="../../assets/js/xl8.js?v=20261110-selection"></script>
+    <script defer src="../../assets/vendor/mammoth-1.13.0/mammoth.browser.min.js"></script>
+    <script type="module" src="../../assets/js/xl8.js?v=20261111-word"></script>
     <link rel="stylesheet" href="../../assets/css/site-nav.css">
     <script defer src="../../assets/js/site-nav.js?v=20261110"></script>
 </head>
@@ -21,14 +22,19 @@
         <div class="arbsq-tool-nav-inner"><span class="arbsq-tool-name">XL8</span><a onclick="return navigate_to(this, event)" href="dashboard.html">Saved projects</a><a onclick="return navigate_to(this, event)" href="index.html" aria-current="page">New translation</a></div>
     </nav>
     <main id="main" class="page input-page">
-        <div class="page-heading"><p class="context">Computer assisted translation</p><h1>Start a translation</h1><p>Bring your source text. Work through the translation, one sentence at a time.</p></div>
+        <div class="page-heading"><p class="context">Computer assisted translation</p><h1>Start a translation</h1><p>Paste your source text or import a TXT or Word document. Work through the translation, one sentence at a time.</p></div>
         <div id="error" class="message error" role="alert" hidden></div>
         <form id="project-form" onsubmit="return submit_project(event)" class="panel">
             <div class="form-row"><label for="project-name">Project name <span class="optional">(optional)</span></label><input id="project-name" maxlength="150" placeholder="e.g. Annual report"></div>
             <fieldset class="source-field"><legend>Source material</legend>
-                <div class="tabs" role="tablist" aria-label="Source input method"><button type="button" role="tab" id="paste-tab" onclick="change_input_method('paste')" onkeydown="input_tab_key(event)" aria-selected="true" aria-controls="paste-panel">Paste text</button><button type="button" role="tab" id="file-tab" onclick="change_input_method('file')" onkeydown="input_tab_key(event)" aria-selected="false" aria-controls="file-panel" tabindex="-1">TXT file</button></div>
+                <div class="tabs" role="tablist" aria-label="Source input method">
+                    <button type="button" role="tab" id="paste-tab" onclick="change_input_method('paste')" onkeydown="input_tab_key(event)" aria-selected="true" aria-controls="paste-panel">Paste text</button>
+                    <button type="button" role="tab" id="file-tab" onclick="change_input_method('file')" onkeydown="input_tab_key(event)" aria-selected="false" aria-controls="file-panel" tabindex="-1">TXT file</button>
+                    <button type="button" role="tab" id="word-tab" onclick="change_input_method('word')" onkeydown="input_tab_key(event)" aria-selected="false" aria-controls="word-panel" tabindex="-1">Word file</button>
+                </div>
                 <div id="paste-panel" role="tabpanel" aria-labelledby="paste-tab"><label for="source-text">Source text</label><textarea id="source-text" rows="8" dir="auto" placeholder="Paste document or website text here…"></textarea></div>
-                <div id="file-panel" role="tabpanel" aria-labelledby="file-tab" hidden><label for="source-file">Text document</label><input type="file" id="source-file" onchange="update_file_status(this.files[0])" accept=".txt,text/plain"><p class="help">UTF-8 TXT files. Word and PDF files are not supported in this version.</p><p id="file-status" class="help" aria-live="polite">No file selected.</p></div>
+                <div id="file-panel" role="tabpanel" aria-labelledby="file-tab" hidden><label for="source-file">Text document</label><input type="file" id="source-file" onchange="update_file_status(this.files[0])" accept=".txt,text/plain" aria-describedby="file-help file-status"><p class="help" id="file-help">UTF-8 TXT files. For Word documents, use the Word file tab.</p><p id="file-status" class="help" aria-live="polite">No file selected.</p></div>
+                <div id="word-panel" role="tabpanel" aria-labelledby="word-tab" hidden><label for="word-file">Word document</label><input type="file" id="word-file" onchange="update_file_status(this.files[0], 'word')" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-describedby="word-help word-status"><p class="help" id="word-help">DOCX files. Imports paragraph and table text only; formatting and images are not preserved. For older .doc files, save a .docx copy in Word first.</p><p id="word-status" class="help" aria-live="polite">No file selected.</p></div>
             </fieldset>
             <div class="form-grid"><div><label for="source-language">Source language</label><select id="source-language" onchange="update_source_language(this.value)"></select></div><div><label for="target-language">Target language</label><select id="target-language"></select></div></div>
             <div class="form-row"><label for="model">MT / AI model</label><select id="model" aria-describedby="model-note"></select><p id="model-note" class="help">Translation is not connected yet. Your model choice and prompt are saved for future use; suggestions are sample content only.</p></div>
