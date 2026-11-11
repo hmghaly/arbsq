@@ -19,6 +19,7 @@ does not activate editing or discard a draft.
 | `editor.html` | Translation table, dialogs, and handler attributes |
 | `../../assets/js/xl8.js` | Top-level UI handlers and workflow orchestration |
 | `../../assets/js/xl8-text.js` | Text splitting, sentence normalization, TXT export |
+| `../../assets/js/xl8-word.js` | Word DOCX plain text import |
 | `../../assets/js/xl8-projects.js` | Project JSON, async storage functions, legacy storage compatibility |
 | `../../assets/js/site-nav.js` | Shared navigation and its named handlers |
 
@@ -27,6 +28,7 @@ does not activate editing or discard a draft.
 | Function | Input | Output |
 | --- | --- | --- |
 | `read_project_input()` | Current form fields | Promise of source text and project settings |
+| `read_word_file(file)` | Selected DOCX file | Promise of plain text, or an actionable error |
 | `split_text(text, project_info)` | Source text and settings including `sourceLanguage`, `documentId` | Sentence-pair array; callers also accept a promise |
 | `create_project()` | Current form | Promise of save result, or `null` after displaying an error; opens the saved project |
 | `upload_project(project_info)` | Project JSON | Promise of `{ project, confirmation: { saved: true, project_id } }` |
@@ -118,6 +120,20 @@ their original IDs and translations.
 
 There is no application text or TXT file-size cap. Browser storage quotas and
 rendering capacity still apply; failed saves leave the previous stored data
-untouched. TXT input must be UTF-8. DOCX/PDF import is not included.
+untouched. TXT input must be UTF-8. DOCX import is available from the Word file tab; PDF import is not included.
 
-Run the storage/text checks with `node tests/xl8.test.mjs` from the repository root.
+Word import runs entirely in the browser, using the vendored Mammoth 1.13.0
+parser in `assets/vendor/`. It extracts paragraphs, manual line breaks, tabs, and
+table text before using the same `split_text` and `upload_project` functions.
+Formatting, images, layout, and table structure are not preserved. Older `.doc`
+files must first be saved as `.docx`; corrupt, encrypted, and textless files show
+an error without creating a project. The parser is loaded only on the input page;
+there is no upload to an external conversion service and no generated document
+HTML is displayed.
+
+The parser's document-transform hook retains manual line breaks (its built-in raw
+text extractor drops them) and returns an empty document to skip image/HTML
+conversion. `read_word_file` remains a single file-to-text function, exposed on
+`window` along with the existing backend replacement points.
+
+Run all checks with `node --test tests/xl8*.test.mjs` from the repository root.
